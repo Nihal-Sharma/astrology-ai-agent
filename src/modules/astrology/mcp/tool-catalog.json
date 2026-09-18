@@ -1,0 +1,1304 @@
+{
+  "foundation": [
+    {
+      "name": "birth_details",
+      "description": "Returns calculated data for birth_details.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "astro_details",
+      "description": "Returns calculated data for astro_details.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "planets",
+      "description": "Returns calculated data for planets.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "planets_extended",
+      "description": "Returns calculated data for planets_extended.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "ayanamsha",
+      "description": "Returns calculated data for ayanamsha.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "kp_birth_chart",
+      "description": "Returns calculated data for kp_birth_chart.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "kp_planets",
+      "description": "Returns calculated data for kp_planets.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "kp_house_cusps",
+      "description": "Returns calculated data for kp_house_cusps.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "kp_house_significator",
+      "description": "Returns calculated data for kp_house_significator.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "kp_planet_significator",
+      "description": "Returns calculated data for kp_planet_significator.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "sarvashtak",
+      "description": "Returns calculated data for sarvashtak.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "planet_ashtak",
+      "description": "Returns calculated data for planet_ashtak.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    }
+  ],
+  "panchang_muhurta": [
+    {
+      "name": "advanced_panchang",
+      "description": "Returns calculated data for advanced_panchang.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time in HH:MM format" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "advanced_panchang_sunrise",
+      "description": "Returns calculated data for advanced_panchang_sunrise.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time in HH:MM format" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "basic_panchang",
+      "description": "Returns calculated data for basic_panchang.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time in HH:MM format" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "basic_panchang_sunrise",
+      "description": "Returns calculated data for basic_panchang_sunrise.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time in HH:MM format" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "chaughadiya_muhurta",
+      "description": "Returns calculated data for chaughadiya_muhurta.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time in HH:MM format" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "hora_muhurta",
+      "description": "Returns calculated data for hora_muhurta.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time in HH:MM format" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "ghat_chakra",
+      "description": "Returns calculated data for ghat_chakra.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time in HH:MM format" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    }
+  ],
+  "matchmaking": [
+    {
+      "name": "match_birth_details",
+      "description": "Returns matchmaking data for match_birth_details.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "boyDateOfBirth": { "type": "string", "description": "Boy's date of birth in ISO format" },
+          "boyTimeOfBirth": { "type": "string", "description": "Boy's time of birth" },
+          "boyLatitude": { "type": "number" },
+          "boyLongitude": { "type": "number" },
+          "boyTimezone": { "type": "string" },
+          "girlDateOfBirth": { "type": "string", "description": "Girl's date of birth in ISO format" },
+          "girlTimeOfBirth": { "type": "string", "description": "Girl's time of birth" },
+          "girlLatitude": { "type": "number" },
+          "girlLongitude": { "type": "number" },
+          "girlTimezone": { "type": "string" }
+        },
+        "required": [ "boyDateOfBirth", "boyTimeOfBirth", "boyLatitude", "boyLongitude", "boyTimezone", "girlDateOfBirth", "girlTimeOfBirth", "girlLatitude", "girlLongitude", "girlTimezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "match_astro_details",
+      "description": "Returns matchmaking data for match_astro_details.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "boyDateOfBirth": { "type": "string", "description": "Boy's date of birth in ISO format" },
+          "boyTimeOfBirth": { "type": "string", "description": "Boy's time of birth" },
+          "boyLatitude": { "type": "number" },
+          "boyLongitude": { "type": "number" },
+          "boyTimezone": { "type": "string" },
+          "girlDateOfBirth": { "type": "string", "description": "Girl's date of birth in ISO format" },
+          "girlTimeOfBirth": { "type": "string", "description": "Girl's time of birth" },
+          "girlLatitude": { "type": "number" },
+          "girlLongitude": { "type": "number" },
+          "girlTimezone": { "type": "string" }
+        },
+        "required": [ "boyDateOfBirth", "boyTimeOfBirth", "boyLatitude", "boyLongitude", "boyTimezone", "girlDateOfBirth", "girlTimeOfBirth", "girlLatitude", "girlLongitude", "girlTimezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "match_planet_details",
+      "description": "Returns matchmaking data for match_planet_details.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "boyDateOfBirth": { "type": "string", "description": "Boy's date of birth in ISO format" },
+          "boyTimeOfBirth": { "type": "string", "description": "Boy's time of birth" },
+          "boyLatitude": { "type": "number" },
+          "boyLongitude": { "type": "number" },
+          "boyTimezone": { "type": "string" },
+          "girlDateOfBirth": { "type": "string", "description": "Girl's date of birth in ISO format" },
+          "girlTimeOfBirth": { "type": "string", "description": "Girl's time of birth" },
+          "girlLatitude": { "type": "number" },
+          "girlLongitude": { "type": "number" },
+          "girlTimezone": { "type": "string" }
+        },
+        "required": [ "boyDateOfBirth", "boyTimeOfBirth", "boyLatitude", "boyLongitude", "boyTimezone", "girlDateOfBirth", "girlTimeOfBirth", "girlLatitude", "girlLongitude", "girlTimezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "match_ashtakoot_points",
+      "description": "Returns matchmaking data for match_ashtakoot_points.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "boyDateOfBirth": { "type": "string", "description": "Boy's date of birth in ISO format" },
+          "boyTimeOfBirth": { "type": "string", "description": "Boy's time of birth" },
+          "boyLatitude": { "type": "number" },
+          "boyLongitude": { "type": "number" },
+          "boyTimezone": { "type": "string" },
+          "girlDateOfBirth": { "type": "string", "description": "Girl's date of birth in ISO format" },
+          "girlTimeOfBirth": { "type": "string", "description": "Girl's time of birth" },
+          "girlLatitude": { "type": "number" },
+          "girlLongitude": { "type": "number" },
+          "girlTimezone": { "type": "string" }
+        },
+        "required": [ "boyDateOfBirth", "boyTimeOfBirth", "boyLatitude", "boyLongitude", "boyTimezone", "girlDateOfBirth", "girlTimeOfBirth", "girlLatitude", "girlLongitude", "girlTimezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "match_dashakoot_points",
+      "description": "Returns matchmaking data for match_dashakoot_points.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "boyDateOfBirth": { "type": "string", "description": "Boy's date of birth in ISO format" },
+          "boyTimeOfBirth": { "type": "string", "description": "Boy's time of birth" },
+          "boyLatitude": { "type": "number" },
+          "boyLongitude": { "type": "number" },
+          "boyTimezone": { "type": "string" },
+          "girlDateOfBirth": { "type": "string", "description": "Girl's date of birth in ISO format" },
+          "girlTimeOfBirth": { "type": "string", "description": "Girl's time of birth" },
+          "girlLatitude": { "type": "number" },
+          "girlLongitude": { "type": "number" },
+          "girlTimezone": { "type": "string" }
+        },
+        "required": [ "boyDateOfBirth", "boyTimeOfBirth", "boyLatitude", "boyLongitude", "boyTimezone", "girlDateOfBirth", "girlTimeOfBirth", "girlLatitude", "girlLongitude", "girlTimezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "match_manglik_report",
+      "description": "Returns matchmaking data for match_manglik_report.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "boyDateOfBirth": { "type": "string", "description": "Boy's date of birth in ISO format" },
+          "boyTimeOfBirth": { "type": "string", "description": "Boy's time of birth" },
+          "boyLatitude": { "type": "number" },
+          "boyLongitude": { "type": "number" },
+          "boyTimezone": { "type": "string" },
+          "girlDateOfBirth": { "type": "string", "description": "Girl's date of birth in ISO format" },
+          "girlTimeOfBirth": { "type": "string", "description": "Girl's time of birth" },
+          "girlLatitude": { "type": "number" },
+          "girlLongitude": { "type": "number" },
+          "girlTimezone": { "type": "string" }
+        },
+        "required": [ "boyDateOfBirth", "boyTimeOfBirth", "boyLatitude", "boyLongitude", "boyTimezone", "girlDateOfBirth", "girlTimeOfBirth", "girlLatitude", "girlLongitude", "girlTimezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "match_obstructions",
+      "description": "Returns matchmaking data for match_obstructions.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "boyDateOfBirth": { "type": "string", "description": "Boy's date of birth in ISO format" },
+          "boyTimeOfBirth": { "type": "string", "description": "Boy's time of birth" },
+          "boyLatitude": { "type": "number" },
+          "boyLongitude": { "type": "number" },
+          "boyTimezone": { "type": "string" },
+          "girlDateOfBirth": { "type": "string", "description": "Girl's date of birth in ISO format" },
+          "girlTimeOfBirth": { "type": "string", "description": "Girl's time of birth" },
+          "girlLatitude": { "type": "number" },
+          "girlLongitude": { "type": "number" },
+          "girlTimezone": { "type": "string" }
+        },
+        "required": [ "boyDateOfBirth", "boyTimeOfBirth", "boyLatitude", "boyLongitude", "boyTimezone", "girlDateOfBirth", "girlTimeOfBirth", "girlLatitude", "girlLongitude", "girlTimezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "match_simple_report",
+      "description": "Returns matchmaking data for match_simple_report.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "boyDateOfBirth": { "type": "string", "description": "Boy's date of birth in ISO format" },
+          "boyTimeOfBirth": { "type": "string", "description": "Boy's time of birth" },
+          "boyLatitude": { "type": "number" },
+          "boyLongitude": { "type": "number" },
+          "boyTimezone": { "type": "string" },
+          "girlDateOfBirth": { "type": "string", "description": "Girl's date of birth in ISO format" },
+          "girlTimeOfBirth": { "type": "string", "description": "Girl's time of birth" },
+          "girlLatitude": { "type": "number" },
+          "girlLongitude": { "type": "number" },
+          "girlTimezone": { "type": "string" }
+        },
+        "required": [ "boyDateOfBirth", "boyTimeOfBirth", "boyLatitude", "boyLongitude", "boyTimezone", "girlDateOfBirth", "girlTimeOfBirth", "girlLatitude", "girlLongitude", "girlTimezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "match_making_detailed_report",
+      "description": "Returns matchmaking data for match_making_detailed_report.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "boyDateOfBirth": { "type": "string", "description": "Boy's date of birth in ISO format" },
+          "boyTimeOfBirth": { "type": "string", "description": "Boy's time of birth" },
+          "boyLatitude": { "type": "number" },
+          "boyLongitude": { "type": "number" },
+          "boyTimezone": { "type": "string" },
+          "girlDateOfBirth": { "type": "string", "description": "Girl's date of birth in ISO format" },
+          "girlTimeOfBirth": { "type": "string", "description": "Girl's time of birth" },
+          "girlLatitude": { "type": "number" },
+          "girlLongitude": { "type": "number" },
+          "girlTimezone": { "type": "string" }
+        },
+        "required": [ "boyDateOfBirth", "boyTimeOfBirth", "boyLatitude", "boyLongitude", "boyTimezone", "girlDateOfBirth", "girlTimeOfBirth", "girlLatitude", "girlLongitude", "girlTimezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    }
+  ],
+  "dasha_timing": [
+    {
+      "name": "current_vdasha",
+      "description": "Returns calculated data for current_vdasha.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "current_vdasha_all",
+      "description": "Returns calculated data for current_vdasha_all.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "major_vdasha",
+      "description": "Returns calculated data for major_vdasha.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "sub_vdasha",
+      "description": "Returns calculated data for sub_vdasha.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "sub_sub_vdasha",
+      "description": "Returns calculated data for sub_sub_vdasha.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "sub_sub_sub_vdasha",
+      "description": "Returns calculated data for sub_sub_sub_vdasha.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "sub_sub_sub_sub_vdasha",
+      "description": "Returns calculated data for sub_sub_sub_sub_vdasha.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "major_yogini_dasha",
+      "description": "Returns calculated data for major_yogini_dasha.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "sub_yogini_dasha",
+      "description": "Returns calculated data for sub_yogini_dasha.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "current_yogini_dasha",
+      "description": "Returns calculated data for current_yogini_dasha.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "timeOfBirth": { "type": "string", "description": "Time of birth" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local",
+      "enabled": true
+    }
+  ],
+  "yearly_strength": [
+    {
+      "name": "current_vdasha",
+      "description": "Returns calculated data for current_vdasha.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "sub_vdasha",
+      "description": "Returns calculated data for sub_vdasha.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "current_yogini_dasha",
+      "description": "Returns calculated data for current_yogini_dasha.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "major_yogini_dasha",
+      "description": "Returns calculated data for major_yogini_dasha.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "advanced_panchang",
+      "description": "Returns calculated data for advanced_panchang.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "sarvashtak",
+      "description": "Returns calculated data for sarvashtak.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "planet_ashtak",
+      "description": "Returns calculated data for planet_ashtak.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    }
+  ],
+  "strength": [
+    {
+      "name": "sarvashtak",
+      "description": "Returns calculated data for sarvashtak.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "planet_ashtak",
+      "description": "Returns calculated data for planet_ashtak.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "kp_planets",
+      "description": "Returns calculated data for kp_planets.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "kp_house_cusps",
+      "description": "Returns calculated data for kp_house_cusps.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "kp_birth_chart",
+      "description": "Returns calculated data for kp_birth_chart.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "kp_house_significator",
+      "description": "Returns calculated data for kp_house_significator.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "kp_planet_significator",
+      "description": "Returns calculated data for kp_planet_significator.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    }
+  ],
+  "dosha_remedy": [
+    {
+      "name": "manglik",
+      "description": "Returns calculated data for manglik.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "kalsarpa_details",
+      "description": "Returns calculated data for kalsarpa_details.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "pitra_dosha_report",
+      "description": "Returns calculated data for pitra_dosha_report.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "sadhesati_life_details",
+      "description": "Returns calculated data for sadhesati_life_details.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "sadhesati_current_status",
+      "description": "Returns calculated data for sadhesati_current_status.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "lalkitab_horoscope",
+      "description": "Returns calculated data for lalkitab_horoscope.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "lalkitab_debts",
+      "description": "Returns calculated data for lalkitab_debts.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "lalkitab_houses",
+      "description": "Returns calculated data for lalkitab_houses.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "lalkitab_planets",
+      "description": "Returns calculated data for lalkitab_planets.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "basic_gem_suggestion",
+      "description": "Returns calculated data for basic_gem_suggestion.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "rudraksha_suggestion",
+      "description": "Returns calculated data for rudraksha_suggestion.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    }
+  ],
+  "western_transits": [
+    {
+      "name": "planets_tropical",
+      "description": "Returns calculated data for planets_tropical.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "house_cusps_tropical",
+      "description": "Returns calculated data for house_cusps_tropical.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    }
+  ],
+  "numerology": [
+    {
+      "name": "numero_table",
+      "description": "Returns numerology details for numero_table.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string", "description": "Date of birth in ISO format" },
+          "name": { "type": "string", "description": "Full name" }
+        },
+        "required": [ "dateOfBirth", "name" ]
+      },
+      "source": "local",
+      "enabled": true
+    }
+  ],
+  "biorhythm": [
+    {
+      "name": "sadhesati_current_status",
+      "description": "Returns calculated data for sadhesati_current_status.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "sadhesati_life_details",
+      "description": "Returns calculated data for sadhesati_life_details.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" }
+        },
+        "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ]
+      },
+      "source": "local", "enabled": true
+    }
+  ],
+  "location": [
+    {
+      "name": "geo_details",
+      "description": "Returns geographical details for geo_details.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "place": { "type": "string", "description": "Name of the location/city" }
+        },
+        "required": [ "place" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "timezone",
+      "description": "Returns timezone details for timezone.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "place": { "type": "string", "description": "Name of the location/city" }
+        },
+        "required": [ "place" ]
+      },
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "timezone_with_dst",
+      "description": "Returns timezone details for timezone_with_dst.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "place": { "type": "string", "description": "Name of the location/city" }
+        },
+        "required": [ "place" ]
+      },
+      "source": "local",
+      "enabled": true
+    }
+  ],
+  "career": [
+    {
+      "name": "planets",
+      "description": "Returns calculated data for planets.",
+      "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "planets_extended",
+      "description": "Returns calculated data for planets_extended.",
+      "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "astro_details",
+      "description": "Returns calculated data for astro_details.",
+      "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "kp_birth_chart",
+      "description": "Returns calculated data for kp_birth_chart.",
+      "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "kp_planets",
+      "description": "Returns calculated data for kp_planets.",
+      "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "kp_house_cusps",
+      "description": "Returns calculated data for kp_house_cusps.",
+      "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "kp_house_significator",
+      "description": "Returns calculated data for kp_house_significator.",
+      "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "kp_planet_significator",
+      "description": "Returns calculated data for kp_planet_significator.",
+      "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "sarvashtak",
+      "description": "Returns calculated data for sarvashtak.",
+      "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "planet_ashtak",
+      "description": "Returns calculated data for planet_ashtak.",
+      "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "lalkitab_horoscope",
+      "description": "Returns calculated data for lalkitab_horoscope.",
+      "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "lalkitab_planets",
+      "description": "Returns calculated data for lalkitab_planets.",
+      "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "current_vdasha",
+      "description": "Returns calculated data for current_vdasha.",
+      "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "sub_vdasha",
+      "description": "Returns calculated data for sub_vdasha.",
+      "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] },
+      "source": "local", "enabled": true
+    },
+    {
+      "name": "current_yogini_dasha",
+      "description": "Returns calculated data for current_yogini_dasha.",
+      "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] },
+      "source": "local", "enabled": true
+    }
+  ],
+  "finance": [
+    { "name": "planets", "description": "Returns calculated data for planets.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "astro_details", "description": "Returns calculated data for astro_details.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "kp_house_significator", "description": "Returns calculated data for kp_house_significator.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "kp_planet_significator", "description": "Returns calculated data for kp_planet_significator.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "sarvashtak", "description": "Returns calculated data for sarvashtak.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "planet_ashtak", "description": "Returns calculated data for planet_ashtak.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "lalkitab_debts", "description": "Returns calculated data for lalkitab_debts.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "lalkitab_houses", "description": "Returns calculated data for lalkitab_houses.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "lalkitab_planets", "description": "Returns calculated data for lalkitab_planets.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "lalkitab_horoscope", "description": "Returns calculated data for lalkitab_horoscope.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "current_vdasha", "description": "Returns calculated data for current_vdasha.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "sub_vdasha", "description": "Returns calculated data for sub_vdasha.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "numero_table", "description": "Returns numerology details for numero_table.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "name": { "type": "string" } }, "required": [ "dateOfBirth", "name" ] }, "source": "local", "enabled": true }
+  ],
+  "marriage": [
+    { "name": "planets", "description": "Returns calculated data for planets.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "astro_details", "description": "Returns calculated data for astro_details.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "kp_house_cusps", "description": "Returns calculated data for kp_house_cusps.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "kp_house_significator", "description": "Returns calculated data for kp_house_significator.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "kp_planet_significator", "description": "Returns calculated data for kp_planet_significator.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "manglik", "description": "Returns calculated data for manglik.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "pitra_dosha_report", "description": "Returns calculated data for pitra_dosha_report.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "kalsarpa_details", "description": "Returns calculated data for kalsarpa_details.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "sarvashtak", "description": "Returns calculated data for sarvashtak.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "planet_ashtak", "description": "Returns calculated data for planet_ashtak.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "current_vdasha", "description": "Returns calculated data for current_vdasha.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "sub_vdasha", "description": "Returns calculated data for sub_vdasha.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "current_yogini_dasha", "description": "Returns calculated data for current_yogini_dasha.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true }
+  ],
+  "relationship": [
+    { "name": "planets", "description": "Returns calculated data for planets.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "astro_details", "description": "Returns calculated data for astro_details.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "kp_house_significator", "description": "Returns calculated data for kp_house_significator.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "kp_planet_significator", "description": "Returns calculated data for kp_planet_significator.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "manglik", "description": "Returns calculated data for manglik.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "sarvashtak", "description": "Returns calculated data for sarvashtak.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "current_vdasha", "description": "Returns calculated data for current_vdasha.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "sub_vdasha", "description": "Returns calculated data for sub_vdasha.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "current_yogini_dasha", "description": "Returns calculated data for current_yogini_dasha.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true }
+  ],
+  "health": [
+    { "name": "planets", "description": "Returns calculated data for planets.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "astro_details", "description": "Returns calculated data for astro_details.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "sadhesati_current_status", "description": "Returns calculated data for sadhesati_current_status.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "sadhesati_life_details", "description": "Returns calculated data for sadhesati_life_details.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "pitra_dosha_report", "description": "Returns calculated data for pitra_dosha_report.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "kalsarpa_details", "description": "Returns calculated data for kalsarpa_details.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "advanced_panchang", "description": "Returns calculated data for advanced_panchang.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "current_vdasha", "description": "Returns calculated data for current_vdasha.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "sub_vdasha", "description": "Returns calculated data for sub_vdasha.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true }
+  ],
+  "education": [
+    { "name": "planets", "description": "Returns calculated data for planets.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "astro_details", "description": "Returns calculated data for astro_details.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "kp_house_significator", "description": "Returns calculated data for kp_house_significator.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "kp_planet_significator", "description": "Returns calculated data for kp_planet_significator.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "sarvashtak", "description": "Returns calculated data for sarvashtak.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "planet_ashtak", "description": "Returns calculated data for planet_ashtak.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "current_vdasha", "description": "Returns calculated data for current_vdasha.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "sub_vdasha", "description": "Returns calculated data for sub_vdasha.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "current_yogini_dasha", "description": "Returns calculated data for current_yogini_dasha.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true }
+  ],
+  "remedy": [
+    { "name": "basic_gem_suggestion", "description": "Returns calculated data for basic_gem_suggestion.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "rudraksha_suggestion", "description": "Returns calculated data for rudraksha_suggestion.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "pitra_dosha_report", "description": "Returns calculated data for pitra_dosha_report.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "kalsarpa_details", "description": "Returns calculated data for kalsarpa_details.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "manglik", "description": "Returns calculated data for manglik.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "sadhesati_current_status", "description": "Returns calculated data for sadhesati_current_status.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "sadhesati_life_details", "description": "Returns calculated data for sadhesati_life_details.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "lalkitab_debts", "description": "Returns calculated data for lalkitab_debts.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "lalkitab_horoscope", "description": "Returns calculated data for lalkitab_horoscope.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "lalkitab_houses", "description": "Returns calculated data for lalkitab_houses.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "lalkitab_planets", "description": "Returns calculated data for lalkitab_planets.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "advanced_panchang", "description": "Returns calculated data for advanced_panchang.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "chaughadiya_muhurta", "description": "Returns calculated data for chaughadiya_muhurta.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "hora_muhurta", "description": "Returns calculated data for hora_muhurta.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true }
+  ],
+  "name_business": [
+    { "name": "numero_table", "description": "Returns numerology details for numero_table.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "name": { "type": "string" } }, "required": [ "dateOfBirth", "name" ] }, "source": "local", "enabled": true },
+    { "name": "astro_details", "description": "Returns calculated data for astro_details.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "planets", "description": "Returns calculated data for planets.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "kp_planet_significator", "description": "Returns calculated data for kp_planet_significator.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "kp_house_significator", "description": "Returns calculated data for kp_house_significator.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true }
+  ],
+  "spiritual": [
+    { "name": "astro_details", "description": "Returns calculated data for astro_details.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "advanced_panchang", "description": "Returns calculated data for advanced_panchang.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "ghat_chakra", "description": "Returns calculated data for ghat_chakra.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "pitra_dosha_report", "description": "Returns calculated data for pitra_dosha_report.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "kalsarpa_details", "description": "Returns calculated data for kalsarpa_details.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "rudraksha_suggestion", "description": "Returns calculated data for rudraksha_suggestion.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "lalkitab_horoscope", "description": "Returns calculated data for lalkitab_horoscope.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true },
+    { "name": "sadhesati_current_status", "description": "Returns calculated data for sadhesati_current_status.", "inputSchema": { "type": "object", "properties": { "dateOfBirth": { "type": "string" }, "timeOfBirth": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "timezone": { "type": "string" } }, "required": [ "dateOfBirth", "timeOfBirth", "latitude", "longitude", "timezone" ] }, "source": "local", "enabled": true }
+  ]
+}
