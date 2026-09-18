@@ -28,7 +28,9 @@ export class UserService {
     const user =
       await this.repository.create(input);
 
-    return user.toObject();
+    return this.sanitize(
+      user.toObject()
+    );
   }
 
   async getUserById(
@@ -37,7 +39,9 @@ export class UserService {
     const user =
       await this.repository.findById(userId);
 
-    return user?.toObject() ?? null;
+    return user
+      ? this.sanitize(user.toObject())
+      : null;
   }
 
   async getUserByEmail(
@@ -46,7 +50,24 @@ export class UserService {
     const user =
       await this.repository.findByEmail(email);
 
-    return user?.toObject() ?? null;
+    return user
+      ? this.sanitize(user.toObject())
+      : null;
+  }
+
+  /**
+   * `passwordHash` is `select: false` at the schema level, but
+   * findByEmail explicitly re-selects it for AuthService's
+   * login/registration use — strip it back out before returning
+   * a `User` to anything outside that flow.
+   */
+  private sanitize(user: User): User {
+    const {
+      passwordHash: _passwordHash,
+      ...rest
+    } = user;
+
+    return rest as User;
   }
 
   async updateUser(
@@ -59,7 +80,9 @@ export class UserService {
         input
       );
 
-    return user?.toObject() ?? null;
+    return user
+      ? this.sanitize(user.toObject())
+      : null;
   }
 
   async deleteUser(

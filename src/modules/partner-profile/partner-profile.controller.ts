@@ -11,6 +11,10 @@ import {
   UpdatePartnerProfileInput,
 } from "./partner-profile.types";
 
+import {
+  requireConversationOwnership,
+} from "../auth";
+
 interface ConversationIdParams {
   conversationId: string;
 }
@@ -22,24 +26,46 @@ export async function registerPartnerProfileController(
   const service =
     container.services.partnerProfile;
 
-  app.post(
+  const guards = [
+    app.authenticate,
+    requireConversationOwnership(
+      container
+    ),
+  ];
+
+  app.post<{
+    Params: ConversationIdParams;
+    Body: Omit<
+      CreatePartnerProfileInput,
+      "conversationId" | "userId"
+    >;
+  }>(
     "/conversations/:conversationId/partner-profile",
+    {
+      preHandler: guards,
+    },
     async (
       request: FastifyRequest<{
         Params: ConversationIdParams;
         Body: Omit<
           CreatePartnerProfileInput,
           "conversationId" | "userId"
-        > & {
-          userId: string;
-        };
+        >;
       }>,
       reply: FastifyReply
     ) => {
+      /*
+       * userId comes from the verified token, not the request
+       * body — see the same fix on conversation messages. See
+       * §6 (Auth).
+       */
       const profile =
         await service.createPartnerProfile({
           conversationId:
             request.params.conversationId,
+
+          userId:
+            request.user.userId,
 
           ...request.body,
         });
@@ -51,8 +77,13 @@ export async function registerPartnerProfileController(
     }
   );
 
-  app.get(
+  app.get<{
+    Params: ConversationIdParams;
+  }>(
     "/conversations/:conversationId/partner-profile",
+    {
+      preHandler: guards,
+    },
     async (
       request: FastifyRequest<{
         Params: ConversationIdParams;
@@ -81,8 +112,14 @@ export async function registerPartnerProfileController(
     }
   );
 
-  app.patch(
+  app.patch<{
+    Params: ConversationIdParams;
+    Body: UpdatePartnerProfileInput;
+  }>(
     "/conversations/:conversationId/partner-profile",
+    {
+      preHandler: guards,
+    },
     async (
       request: FastifyRequest<{
         Params: ConversationIdParams;
@@ -113,8 +150,13 @@ export async function registerPartnerProfileController(
     }
   );
 
-  app.delete(
+  app.delete<{
+    Params: ConversationIdParams;
+  }>(
     "/conversations/:conversationId/partner-profile",
+    {
+      preHandler: guards,
+    },
     async (
       request: FastifyRequest<{
         Params: ConversationIdParams;

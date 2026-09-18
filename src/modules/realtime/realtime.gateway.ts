@@ -1,8 +1,13 @@
 import {
   FastifyInstance,
+  FastifyRequest,
 } from "fastify";
 
 import websocket from "@fastify/websocket";
+
+import type {
+  RawData,
+} from "ws";
 
 import {
   AppContainer,
@@ -17,6 +22,14 @@ import {
   RealtimeSessionContext,
 } from "./realtime.service";
 
+import {
+  activeWebsocketConnections,
+} from "../../infrastructure/observability/metrics";
+
+interface WsAuthQuery {
+  token?: string;
+}
+
 export async function registerRealtimeGateway(
   app: FastifyInstance,
   container: AppContainer
@@ -30,18 +43,76 @@ export async function registerRealtimeGateway(
       container.services.agent,
       container.speech.stt,
       container.speech.tts,
-      container.logger
+      container.logger,
+      container.config.rateLimit
+        .chatMaxPerMinute
     );
 
-  app.get(
+  app.get<{
+    Querystring: WsAuthQuery;
+  }>(
     "/ws",
     {
       websocket: true,
+
+      /*
+       * Browsers' native WebSocket API can't set custom headers
+       * on the upgrade request, so auth travels as a query
+       * param here rather than `Authorization: Bearer` — see
+       * §6 (Auth). This is the only place a token is accepted
+       * outside a header.
+       */
+      preHandler: async (
+        request: FastifyRequest<{
+          Querystring: WsAuthQuery;
+        }>,
+        reply
+      ) => {
+        const token =
+          request.query.token;
+
+        if (!token) {
+          return reply
+            .status(401)
+            .send({
+              success: false,
+              error: {
+                code: "UNAUTHORIZED",
+                message:
+                  "Missing token query parameter",
+              },
+            });
+        }
+
+        try {
+          request.user =
+            app.jwt.verify(token);
+        } catch {
+          return reply
+            .status(401)
+            .send({
+              success: false,
+              error: {
+                code: "UNAUTHORIZED",
+                message:
+                  "Invalid or expired token",
+              },
+            });
+        }
+      },
     },
     (socket, request) => {
       const session: RealtimeSessionContext = {
         sessionId:
           crypto.randomUUID(),
+
+        /*
+         * From the verified token, not client-supplied — see
+         * the session:start handler below, which no longer
+         * trusts a client-sent userId either.
+         */
+        userId:
+          request.user.userId,
       };
 
       container.logger.info(
@@ -52,17 +123,22 @@ export async function registerRealtimeGateway(
           sessionId:
             session.sessionId,
 
+          userId:
+            session.userId,
+
           ip:
             request.ip,
         },
         "WebSocket session connected"
       );
 
+      activeWebsocketConnections.inc();
+
       socket.on(
         "message",
         async (
-          raw,
-          isBinary
+          raw: RawData,
+          isBinary: boolean
         ) => {
           try {
             /*
@@ -104,15 +180,62 @@ export async function registerRealtimeGateway(
             ) {
               const payload =
                 event.payload as {
-                  userId?: string;
                   conversationId?: string;
                 };
 
-              session.userId =
-                payload.userId;
+              /*
+               * session.userId is already set from the verified
+               * token at connection time — a client-supplied
+               * userId here is ignored, not trusted. The
+               * conversationId IS client-supplied, so its
+               * ownership must be checked before accepting it.
+               */
+              if (
+                payload.conversationId
+              ) {
+                const conversation =
+                  await container.services.conversation.getConversation(
+                    payload.conversationId
+                  );
 
-              session.conversationId =
-                payload.conversationId;
+                if (
+                  !conversation ||
+                  conversation.userId.toString() !==
+                    session.userId
+                ) {
+                  /*
+                   * Reject just this session:start, don't kill
+                   * the whole connection — the token itself is
+                   * still valid, so the client can simply retry
+                   * with a conversationId it actually owns.
+                   * session.conversationId is left unset, so any
+                   * subsequent chat:send/audio:end still can't
+                   * proceed (see the "conversationId is required"
+                   * guard in RealtimeService).
+                   */
+                  socket.send(
+                    JSON.stringify({
+                      type: "chat:error",
+
+                      requestId:
+                        event.requestId,
+
+                      payload: {
+                        message:
+                          "Conversation not found or not accessible",
+                      },
+
+                      timestamp:
+                        new Date().toISOString(),
+                    })
+                  );
+
+                  return;
+                }
+
+                session.conversationId =
+                  payload.conversationId;
+              }
 
               socket.send(
                 JSON.stringify({
@@ -345,6 +468,8 @@ export async function registerRealtimeGateway(
           realtimeService.cancel(
             session
           );
+
+          activeWebsocketConnections.dec();
 
           container.logger.info(
             {

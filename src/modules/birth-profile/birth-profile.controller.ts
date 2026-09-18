@@ -11,6 +11,10 @@ import {
   UpdateBirthProfileInput,
 } from "./birth-profile.types";
 
+import {
+  requireSelf,
+} from "../auth";
+
 interface UserIdParams {
   userId: string;
 }
@@ -22,8 +26,22 @@ export async function registerBirthProfileController(
   const service =
     container.services.birthProfile;
 
-  app.post(
+  const guards = [
+    app.authenticate,
+    requireSelf("userId"),
+  ];
+
+  app.post<{
+    Params: UserIdParams;
+    Body: Omit<
+      CreateBirthProfileInput,
+      "userId"
+    >;
+  }>(
     "/users/:userId/birth-profile",
+    {
+      preHandler: guards,
+    },
     async (
       request: FastifyRequest<{
         Params: UserIdParams;
@@ -47,8 +65,13 @@ export async function registerBirthProfileController(
     }
   );
 
-  app.get(
+  app.get<{
+    Params: UserIdParams;
+  }>(
     "/users/:userId/birth-profile",
+    {
+      preHandler: guards,
+    },
     async (
       request: FastifyRequest<{
         Params: UserIdParams;
@@ -77,8 +100,14 @@ export async function registerBirthProfileController(
     }
   );
 
-  app.patch(
+  app.patch<{
+    Params: UserIdParams;
+    Body: UpdateBirthProfileInput;
+  }>(
     "/users/:userId/birth-profile",
+    {
+      preHandler: guards,
+    },
     async (
       request: FastifyRequest<{
         Params: UserIdParams;

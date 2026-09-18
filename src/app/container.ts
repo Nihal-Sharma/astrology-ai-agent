@@ -118,6 +118,18 @@ export interface AppContainer {
     agent: AgentService;
    astrology: AstrologyService;
   };
+
+  /**
+   * Cascade-deletes everything owned by a user account — birth
+   * profile, partner profiles they added, conversations +
+   * messages, and memories — before deleting the user record
+   * itself. See §6 (Data privacy) / PRIVACY.md. Exposed at the
+   * container level (not a module service) since it's the one
+   * operation that legitimately spans every module's data.
+   */
+  deleteUserAccount(
+    userId: string
+  ): Promise<boolean>;
 }
 function extractRequiredInputs(
   inputSchema: unknown
@@ -601,7 +613,7 @@ const astrologyService =
         astrologyService,
 
       rag:
-        ragService,
+        ragDependency,
 
       memory:
         memoryDependency,
@@ -614,12 +626,57 @@ const astrologyService =
 
   /*
    * ============================================================
+   * Account deletion (cascade)
+   * ============================================================
+   */
+
+  async function deleteUserAccount(
+    userId: string
+  ): Promise<boolean> {
+    const user =
+      await userRepository.findById(
+        userId
+      );
+
+    if (!user) {
+      return false;
+    }
+
+    await Promise.all([
+      birthProfileRepository.deleteByUserId(
+        userId
+      ),
+
+      partnerProfileRepository.deleteByUserId(
+        userId
+      ),
+
+      conversationRepository.deleteAllForUser(
+        userId
+      ),
+
+      memoryRepository.deleteByUserId(
+        userId
+      ),
+    ]);
+
+    await userRepository.deleteById(
+      userId
+    );
+
+    return true;
+  }
+
+  /*
+   * ============================================================
    * Container
    * ============================================================
    */
 
   return {
     config,
+
+    deleteUserAccount,
 
     logger,
 

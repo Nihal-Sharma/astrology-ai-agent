@@ -62,7 +62,7 @@ export class BirthProfileRepository {
         $set: input,
       },
       {
-        new: true,
+        returnDocument: "after",
         runValidators: true,
       }
     ).exec();

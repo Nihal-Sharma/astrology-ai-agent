@@ -77,7 +77,7 @@ export class ConversationRepository {
         $set: input,
       },
       {
-        new: true,
+        returnDocument: "after",
         runValidators: true,
       }
     ).exec();
@@ -267,5 +267,30 @@ export class ConversationRepository {
         createdAt: -1,
       })
       .exec();
+  }
+
+  /**
+   * Cascade delete for account deletion — see §6 (Data
+   * privacy). Deletes both the conversations and their
+   * messages, not just the conversation shells.
+   */
+  async deleteAllForUser(
+    userId: string
+  ): Promise<void> {
+    if (!Types.ObjectId.isValid(userId)) {
+      return;
+    }
+
+    await ConversationMessageModel.deleteMany(
+      {
+        userId,
+      }
+    ).exec();
+
+    await ConversationModel.deleteMany(
+      {
+        userId,
+      }
+    ).exec();
   }
 }

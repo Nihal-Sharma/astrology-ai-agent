@@ -111,6 +111,50 @@ export const config = Object.freeze({
     requestTimeoutMs: getEnvNumber("MCP_REQUEST_TIMEOUT_MS", 5000),
   },
 
+  auth: {
+    /**
+     * Required — there is no safe default for a signing
+     * secret. Generate with:
+     * node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+     */
+    jwtSecret: getEnv("JWT_SECRET"),
+
+    jwtExpiresIn: getEnv(
+      "JWT_EXPIRES_IN",
+      "30d"
+    ),
+  },
+
+  cors: {
+    origin: getEnv("CORS_ORIGIN", "*"),
+  },
+
+  rateLimit: {
+    /**
+     * General REST API limit.
+     */
+    max: getEnvNumber(
+      "RATE_LIMIT_MAX",
+      100
+    ),
+
+    windowMs: getEnvNumber(
+      "RATE_LIMIT_WINDOW_MS",
+      60_000
+    ),
+
+    /**
+     * Separate, stricter limit on LLM-backed chat/voice turns
+     * over the realtime WebSocket (cost control) — REST-level
+     * rate limiting doesn't apply there since it's not a normal
+     * HTTP request per turn.
+     */
+    chatMaxPerMinute: getEnvNumber(
+      "CHAT_RATE_LIMIT_PER_MINUTE",
+      20
+    ),
+  },
+
   features: {
     enableMemory: getEnvBoolean("ENABLE_MEMORY", true),
     enableRag: getEnvBoolean("ENABLE_RAG", true),

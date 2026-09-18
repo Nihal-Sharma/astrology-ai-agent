@@ -12,6 +12,10 @@ import {
   LlmStreamChunk,
 } from "./llm.types";
 
+import {
+  llmRequestDurationMs,
+} from "../observability/metrics";
+
 export interface OpenAiLlmClientOptions {
   apiKey: string;
 
@@ -96,6 +100,16 @@ export class OpenAiLlmClient
         "LLM generation completed"
       );
 
+      llmRequestDurationMs.observe(
+        {
+          provider: "openai",
+          model,
+          operation: "generate",
+          status: "success",
+        },
+        durationMs
+      );
+
       return {
         text: response.output_text,
 
@@ -119,6 +133,16 @@ export class OpenAiLlmClient
           durationMs,
         },
         "LLM generation failed"
+      );
+
+      llmRequestDurationMs.observe(
+        {
+          provider: "openai",
+          model,
+          operation: "generate",
+          status: "error",
+        },
+        durationMs
       );
 
       throw error;
@@ -212,6 +236,16 @@ export class OpenAiLlmClient
             "LLM stream completed"
           );
 
+          llmRequestDurationMs.observe(
+            {
+              provider: "openai",
+              model,
+              operation: "stream",
+              status: "success",
+            },
+            durationMs
+          );
+
           yield {
             type: "completed",
 
@@ -242,6 +276,16 @@ export class OpenAiLlmClient
           durationMs,
         },
         "LLM stream failed"
+      );
+
+      llmRequestDurationMs.observe(
+        {
+          provider: "openai",
+          model,
+          operation: "stream",
+          status: "error",
+        },
+        durationMs
       );
 
       yield {

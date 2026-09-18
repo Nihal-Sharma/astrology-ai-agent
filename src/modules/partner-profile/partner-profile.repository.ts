@@ -53,7 +53,7 @@ export class PartnerProfileRepository {
         $set: input,
       },
       {
-        new: true,
+        returnDocument: "after",
         runValidators: true,
       }
     ).exec();
@@ -74,5 +74,27 @@ export class PartnerProfileRepository {
       }).exec();
 
     return result.deletedCount === 1;
+  }
+
+  /**
+   * Cascade delete for account deletion — see §6 (Data
+   * privacy). Partner profiles are the one collection here that
+   * also contains a THIRD PARTY's birth data (someone who never
+   * directly consented), not just the account holder's own —
+   * deleting them when the account that added them is deleted
+   * is the correct default.
+   */
+  async deleteByUserId(
+    userId: string
+  ): Promise<void> {
+    if (!Types.ObjectId.isValid(userId)) {
+      return;
+    }
+
+    await PartnerProfileModel.deleteMany(
+      {
+        userId,
+      }
+    ).exec();
   }
 }

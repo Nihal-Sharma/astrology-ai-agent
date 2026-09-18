@@ -19,6 +19,10 @@ import {
   McpToolCallResult,
 } from "./mcp.types";
 
+import {
+  mcpToolCallDurationMs,
+} from "../../../infrastructure/observability/metrics";
+
 export interface ExecuteToolsInput {
   tools: string[];
 
@@ -108,6 +112,9 @@ export class McpExecutor {
     toolName: string,
     input: ExecuteToolsInput
   ): Promise<McpToolCallResult> {
+    const startedAt =
+      performance.now();
+
     const args =
       input.arguments?.[
         toolName
@@ -135,6 +142,18 @@ export class McpExecutor {
         "MCP tool cache hit"
       );
 
+      mcpToolCallDurationMs.observe(
+        {
+          tool: toolName,
+          status: "success",
+          cacheHit: "true",
+        },
+        Math.round(
+          performance.now() -
+            startedAt
+        )
+      );
+
       return cached;
     }
 
@@ -146,6 +165,21 @@ export class McpExecutor {
 
         signal: input.signal,
       });
+
+    mcpToolCallDurationMs.observe(
+      {
+        tool: toolName,
+        status:
+          result.success &&
+          !result.isError
+            ? "success"
+            : "error",
+        cacheHit: "false",
+      },
+      Math.round(
+        performance.now() - startedAt
+      )
+    );
 
     /*
      * Only cache successful results — never cache a

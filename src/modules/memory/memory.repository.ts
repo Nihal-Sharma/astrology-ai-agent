@@ -95,4 +95,20 @@ export class MemoryRepository {
       }
     ).exec();
   }
+
+  /**
+   * Cascade delete for account deletion — see §6 (Data
+   * privacy).
+   */
+  async deleteByUserId(
+    userId: string
+  ): Promise<void> {
+    if (!Types.ObjectId.isValid(userId)) {
+      return;
+    }
+
+    await MemoryItemModel.deleteMany({
+      userId,
+    }).exec();
+  }
 }

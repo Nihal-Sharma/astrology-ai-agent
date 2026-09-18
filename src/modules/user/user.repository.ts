@@ -27,12 +27,20 @@ export class UserRepository {
     return UserModel.findById(userId).exec();
   }
 
+  /**
+   * Explicitly selects `passwordHash` (schema-level
+   * `select: false`) — the only two callers are
+   * AuthService.register (uniqueness check) and
+   * AuthService.login (credential verification).
+   */
   async findByEmail(
     email: string
   ): Promise<UserDocument | null> {
     return UserModel.findOne({
       email: email.toLowerCase().trim(),
-    }).exec();
+    })
+      .select("+passwordHash")
+      .exec();
   }
 
   async updateById(
@@ -49,7 +57,7 @@ export class UserRepository {
         $set: input,
       },
       {
-        new: true,
+        returnDocument: "after",
         runValidators: true,
       }
     ).exec();

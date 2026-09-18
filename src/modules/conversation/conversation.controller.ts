@@ -14,6 +14,11 @@ import {
   UpdateConversationInput,
 } from "./conversation.types";
 
+import {
+  requireConversationOwnership,
+  requireSelf,
+} from "../auth";
+
 interface ConversationIdParams {
   conversationId: string;
 }
@@ -29,11 +34,33 @@ export async function registerConversationController(
   const service =
     container.services.conversation;
 
+  const selfGuards = [
+    app.authenticate,
+    requireSelf("userId"),
+  ];
+
+  const conversationGuards = [
+    app.authenticate,
+    requireConversationOwnership(
+      container
+    ),
+  ];
+
   /*
    * Create conversation
    */
-  app.post(
+  app.post<{
+    Params: UserIdParams;
+
+    Body: Omit<
+      CreateConversationInput,
+      "userId"
+    >;
+  }>(
     "/users/:userId/conversations",
+    {
+      preHandler: selfGuards,
+    },
     async (
       request: FastifyRequest<{
         Params: UserIdParams;
@@ -64,8 +91,18 @@ export async function registerConversationController(
   /*
    * Get conversations for a user
    */
-  app.get(
+  app.get<{
+    Params: UserIdParams;
+
+    Querystring: {
+      limit?: number;
+      skip?: number;
+    };
+  }>(
     "/users/:userId/conversations",
+    {
+      preHandler: selfGuards,
+    },
     async (
       request: FastifyRequest<{
         Params: UserIdParams;
@@ -100,8 +137,13 @@ export async function registerConversationController(
   /*
    * Get conversation
    */
-  app.get(
+  app.get<{
+    Params: ConversationIdParams;
+  }>(
     "/conversations/:conversationId",
+    {
+      preHandler: conversationGuards,
+    },
     async (
       request: FastifyRequest<{
         Params: ConversationIdParams;
@@ -137,8 +179,15 @@ export async function registerConversationController(
   /*
    * Update conversation
    */
-  app.patch(
+  app.patch<{
+    Params: ConversationIdParams;
+
+    Body: UpdateConversationInput;
+  }>(
     "/conversations/:conversationId",
+    {
+      preHandler: conversationGuards,
+    },
     async (
       request: FastifyRequest<{
         Params: ConversationIdParams;
@@ -178,8 +227,18 @@ export async function registerConversationController(
   /*
    * Add a message
    */
-  app.post(
+  app.post<{
+    Params: ConversationIdParams;
+
+    Body: Omit<
+      AddMessageInput,
+      "conversationId" | "userId"
+    >;
+  }>(
     "/conversations/:conversationId/messages",
+    {
+      preHandler: conversationGuards,
+    },
     async (
       request: FastifyRequest<{
         Params: ConversationIdParams;
@@ -187,12 +246,18 @@ export async function registerConversationController(
         Body: Omit<
           AddMessageInput,
           "conversationId" | "userId"
-        > & {
-          userId: string;
-        };
+        >;
       }>,
       reply: FastifyReply
     ) => {
+      /*
+       * userId comes from the verified token, never the request
+       * body — the guard above already confirmed this
+       * conversation belongs to request.user.userId, but a
+       * client-supplied body.userId would let anyone post a
+       * message attributed to a different user in their own
+       * conversation. See §6 (Auth).
+       */
       const message =
         await service.addMessage({
           conversationId:
@@ -200,7 +265,7 @@ export async function registerConversationController(
               .conversationId,
 
           userId:
-            request.body.userId,
+            request.user.userId,
 
           role:
             request.body.role,
@@ -225,8 +290,17 @@ export async function registerConversationController(
   /*
    * Get recent messages
    */
-  app.get(
+  app.get<{
+    Params: ConversationIdParams;
+
+    Querystring: {
+      limit?: number;
+    };
+  }>(
     "/conversations/:conversationId/messages",
+    {
+      preHandler: conversationGuards,
+    },
     async (
       request: FastifyRequest<{
         Params: ConversationIdParams;

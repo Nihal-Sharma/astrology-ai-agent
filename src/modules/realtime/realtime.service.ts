@@ -16,6 +16,10 @@ import {
   ServerEvent,
 } from "./realtime.types";
 
+import {
+  rateLimitedTurnsTotal,
+} from "../../infrastructure/observability/metrics";
+
 /**
  * What a gateway loop actually sends over the socket: a JSON
  * control/status event, or a raw binary audio frame (see the
@@ -106,6 +110,16 @@ export interface RealtimeSessionContext {
 }
 
 export class RealtimeService {
+  /**
+   * Per-user sliding-window turn timestamps — a lightweight,
+   * in-process rate limit on the LLM-backed chat/voice path
+   * (cost control, see §6 Auth/Platform). `@fastify/rate-limit`
+   * covers plain REST endpoints in app.ts, but a chat turn isn't
+   * one HTTP request per turn, so it needs its own check here.
+   */
+  private readonly turnTimestampsByUser =
+    new Map<string, number[]>();
+
   constructor(
     private readonly agentService: AgentService,
 
@@ -113,8 +127,53 @@ export class RealtimeService {
 
     private readonly ttsClient: TTSClient,
 
-    private readonly logger: AppLogger
+    private readonly logger: AppLogger,
+
+    private readonly chatMaxPerMinute: number
   ) {}
+
+  /**
+   * Returns false if `userId` has exceeded
+   * `chatMaxPerMinute` turns in the last 60s, recording this
+   * attempt as consumed if it hasn't.
+   */
+  private checkRateLimit(
+    userId: string
+  ): boolean {
+    const now = Date.now();
+
+    const windowMs = 60_000;
+
+    const recent = (
+      this.turnTimestampsByUser.get(
+        userId
+      ) ?? []
+    ).filter(
+      (timestamp) =>
+        now - timestamp < windowMs
+    );
+
+    if (
+      recent.length >=
+      this.chatMaxPerMinute
+    ) {
+      this.turnTimestampsByUser.set(
+        userId,
+        recent
+      );
+
+      return false;
+    }
+
+    recent.push(now);
+
+    this.turnTimestampsByUser.set(
+      userId,
+      recent
+    );
+
+    return true;
+  }
 
   async *processText(
     session: RealtimeSessionContext,
@@ -134,6 +193,30 @@ export class RealtimeService {
       throw new Error(
         "Session conversationId is required"
       );
+    }
+
+    if (
+      !this.checkRateLimit(
+        session.userId
+      )
+    ) {
+      rateLimitedTurnsTotal.inc();
+
+      yield {
+        type: "chat:error",
+
+        requestId: input.requestId,
+
+        payload: {
+          message:
+            "Rate limit exceeded — please slow down.",
+        },
+
+        timestamp:
+          new Date().toISOString(),
+      };
+
+      return;
     }
 
     /*
@@ -380,6 +463,30 @@ export class RealtimeService {
       throw new Error(
         "Session conversationId is required"
       );
+    }
+
+    if (
+      !this.checkRateLimit(
+        session.userId
+      )
+    ) {
+      rateLimitedTurnsTotal.inc();
+
+      yield {
+        type: "audio:error",
+
+        requestId: input.requestId,
+
+        payload: {
+          message:
+            "Rate limit exceeded — please slow down.",
+        },
+
+        timestamp:
+          new Date().toISOString(),
+      };
+
+      return;
     }
 
     session.activeAbortController?.abort();

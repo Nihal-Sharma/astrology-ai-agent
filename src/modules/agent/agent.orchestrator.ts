@@ -33,6 +33,14 @@ import {
   AgentResponseMode,
 } from "./planner/planner.types";
 
+import {
+  startSpan,
+} from "../../infrastructure/observability/tracing";
+
+import {
+  agentTurnsTotal,
+} from "../../infrastructure/observability/metrics";
+
 /**
  * The orchestrator's public streaming contract: the response
  * text stream, plus a "plan" event yielded once up front so
@@ -175,6 +183,75 @@ export class AgentOrchestrator {
     const startedAt =
       performance.now();
 
+    const turnSpan = startSpan(
+      "agent.turn",
+      this.dependencies.logger,
+      {
+        attributes: {
+          userId: input.userId,
+          conversationId:
+            input.conversationId,
+          inputType:
+            input.inputType ??
+            "text",
+        },
+      }
+    );
+
+    let turnPersonaMode:
+      | AgentPersonaMode
+      | undefined;
+
+    try {
+      yield* this.runTurn(
+        input,
+        turnSpan,
+        startedAt,
+        (mode) => {
+          turnPersonaMode = mode;
+        }
+      );
+
+      agentTurnsTotal.inc({
+        inputType:
+          input.inputType ?? "text",
+        personaMode:
+          turnPersonaMode ??
+          "unknown",
+        status: "success",
+      });
+    } catch (error) {
+      turnSpan.end({
+        status: "error",
+        error:
+          error instanceof Error
+            ? error.message
+            : String(error),
+      });
+
+      agentTurnsTotal.inc({
+        inputType:
+          input.inputType ?? "text",
+        personaMode:
+          turnPersonaMode ??
+          "unknown",
+        status: "error",
+      });
+
+      throw error;
+    }
+  }
+
+  private async *runTurn(
+    input: AgentTurnInput,
+    turnSpan: ReturnType<
+      typeof startSpan
+    >,
+    startedAt: number,
+    onPersonaMode: (
+      mode: AgentPersonaMode
+    ) => void
+  ): AsyncGenerator<AgentStreamEvent> {
     /*
      * 0. Persist the user's message first, before any LLM
      * call — durability wins over ordering neatness. The
@@ -220,6 +297,15 @@ export class AgentOrchestrator {
     /*
      * 2. Planner.
      */
+    const plannerSpan = startSpan(
+      "agent.planner",
+      this.dependencies.logger,
+      {
+        traceId: turnSpan.traceId,
+        parentSpanId: turnSpan.spanId,
+      }
+    );
+
     const plan =
       await this.dependencies
         .planner
@@ -227,6 +313,15 @@ export class AgentOrchestrator {
           window,
           input.signal
         );
+
+    plannerSpan.end({
+      responseMode:
+        plan.responseMode,
+      personaMode:
+        plan.personaMode,
+    });
+
+    onPersonaMode(plan.personaMode);
 
     this.dependencies.logger.debug(
       {
@@ -270,6 +365,15 @@ export class AgentOrchestrator {
      *
      * This is deliberately parallel.
      */
+    const executionSpan = startSpan(
+      "agent.execution",
+      this.dependencies.logger,
+      {
+        traceId: turnSpan.traceId,
+        parentSpanId: turnSpan.spanId,
+      }
+    );
+
     const mcpPromise =
       plan.mcp.required &&
       plan.mcp.tools.length > 0
@@ -346,6 +450,12 @@ export class AgentOrchestrator {
       memoryPromise,
     ]);
 
+    executionSpan.end({
+      mcpCount: mcp.length,
+      ragCount: rag.length,
+      memoryCount: memories.length,
+    });
+
     const results: AgentExecutionResults =
       {
         mcp,
@@ -356,6 +466,15 @@ export class AgentOrchestrator {
     /*
      * 4. Generate answer as a stream.
      */
+    const responseSpan = startSpan(
+      "agent.response",
+      this.dependencies.logger,
+      {
+        traceId: turnSpan.traceId,
+        parentSpanId: turnSpan.spanId,
+      }
+    );
+
     let fullText = "";
 
     let completedSuccessfully = false;
@@ -384,6 +503,11 @@ export class AgentOrchestrator {
 
       yield event;
     }
+
+    responseSpan.end({
+      completedSuccessfully,
+      textLength: fullText.length,
+    });
 
     /*
      * 5. Persist the assistant's reply and, best-effort,
@@ -486,5 +610,11 @@ export class AgentOrchestrator {
       },
       "Agent turn completed"
     );
+
+    turnSpan.end({
+      status: "ok",
+      durationMs,
+      completedSuccessfully,
+    });
   }
 }

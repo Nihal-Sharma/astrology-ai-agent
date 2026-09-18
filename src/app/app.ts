@@ -3,6 +3,9 @@ import Fastify, {
   FastifyServerOptions,
 } from "fastify";
 
+import fastifyCors from "@fastify/cors";
+import fastifyRateLimit from "@fastify/rate-limit";
+
 import { AppContainer } from "./container";
 
 import {
@@ -24,6 +27,20 @@ export interface CreateAppOptions {
 import {
   registerRealtimeGateway,
 } from "../modules/realtime";
+
+import {
+  registerAuthPlugin,
+  registerAuthController,
+} from "../modules/auth";
+
+import {
+  AppError,
+} from "../shared/errors/app-error";
+
+import {
+  metricsRegistry,
+} from "../infrastructure/observability/metrics";
+
 export async function createApp(
   options: CreateAppOptions
 ): Promise<FastifyInstance> {
@@ -38,6 +55,40 @@ export async function createApp(
     logger: loggerOptions,
     trustProxy: true,
   });
+
+  await app.register(fastifyCors, {
+    origin:
+      options.container.config.cors
+        .origin,
+  });
+
+  /*
+   * General REST rate limit (cost/abuse control) — the
+   * separate, stricter per-user chat/voice turn limit lives in
+   * RealtimeService, since that path isn't one HTTP request per
+   * turn. See §6 (Platform/Auth).
+   */
+  await app.register(
+    fastifyRateLimit,
+    {
+      max: options.container.config
+        .rateLimit.max,
+
+      timeWindow:
+        options.container.config
+          .rateLimit.windowMs,
+    }
+  );
+
+  /*
+   * Registers `app.authenticate` — every controller below reads
+   * this decorator at route-registration time, so it must be
+   * registered first.
+   */
+  await registerAuthPlugin(
+    app,
+    options.container
+  );
 
   /**
    * Global health endpoint.
@@ -102,6 +153,25 @@ export async function createApp(
     },
   };
 });
+
+  /**
+   * Prometheus scrape endpoint — see §6 (Observability).
+   * Unauthenticated, same as /health and /ready: it's how
+   * Prometheus itself reaches it (no auth headers by default),
+   * and it exposes only aggregated numeric metrics, no PII.
+   */
+  app.get(
+    "/metrics",
+    async (_request, reply) => {
+      reply.header(
+        "Content-Type",
+        metricsRegistry.contentType
+      );
+
+      return metricsRegistry.metrics();
+    }
+  );
+
   /**
    * Root endpoint.
    */
@@ -112,24 +182,11 @@ export async function createApp(
     };
   });
 
-  /**
-   * TODO:
-   *
-   * Register modules here:
-   *
-   * await registerUserModule(app, container);
-   * await registerConversationModule(app, container);
-   * await registerBirthProfileModule(app, container);
-   * await registerAgentModule(app, container);
-   * await registerVoiceModule(app, container);
-   */
+  await registerAuthController(
+    app,
+    options.container
+  );
 
-  /**
-   * Global error handler.
-   *
-   * We'll replace this with the shared application error system
-   * once src/shared/errors is implemented.
-   */
   await registerRealtimeGateway(
   app,
   options.container
@@ -150,7 +207,53 @@ export async function createApp(
     app,
     options.container
   );
+
+  /**
+   * Global error handler. Recognizes AppError (thrown by
+   * auth/ownership guards and service-layer validation) and
+   * uses its statusCode/message; anything else is an unexpected
+   * 500 with the message hidden outside development.
+   */
   app.setErrorHandler((error: Error, request, reply) => {
+    if (error instanceof AppError) {
+      request.log.warn(
+        {
+          err: error,
+        },
+        "Handled application error"
+      );
+
+      return reply
+        .status(error.statusCode)
+        .send({
+          success: false,
+          error: {
+            code: "APPLICATION_ERROR",
+            message: error.message,
+          },
+        });
+    }
+
+    /*
+     * Fastify's own errors (malformed JSON body, payload too
+     * large, schema validation, ...) already carry a correct
+     * client-error statusCode — use it instead of defaulting
+     * every unrecognized error to 500, so a bad request from
+     * the client is reported as a 4xx, not "our fault".
+     */
+    const fastifyStatusCode = (
+      error as {
+        statusCode?: number;
+      }
+    ).statusCode;
+
+    const statusCode =
+      fastifyStatusCode &&
+      fastifyStatusCode >= 400 &&
+      fastifyStatusCode < 500
+        ? fastifyStatusCode
+        : 500;
+
     request.log.error(
       {
         err: error,
@@ -158,11 +261,15 @@ export async function createApp(
       "Unhandled application error"
     );
 
-    return reply.status(500).send({
+    return reply.status(statusCode).send({
       success: false,
       error: {
-        code: "INTERNAL_SERVER_ERROR",
+        code:
+          statusCode < 500
+            ? "BAD_REQUEST"
+            : "INTERNAL_SERVER_ERROR",
         message:
+          statusCode < 500 ||
           options.container.config.app.env === "development"
             ? error.message
             : "Internal server error",

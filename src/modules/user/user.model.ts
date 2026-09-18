@@ -33,6 +33,12 @@ const userSchema = new Schema<User>(
       trim: true,
     },
 
+    passwordHash: {
+      type: String,
+      required: true,
+      select: false,
+    },
+
     isActive: {
       type: Boolean,
       required: true,
