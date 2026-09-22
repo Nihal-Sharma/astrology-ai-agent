@@ -1,137 +1,328 @@
-# Roadmap — Complete Astrology AI Agent
+# Roadmap — Three-Tier Voice Pipeline (Free / Gold / Diamond)
 
-Where this project stands today, and what's left to become a full
-voice-to-voice astrology companion that behaves like a friend and
-an astrologer at once.
+Supersedes the previous single-track latency roadmap. The product
+direction changed: instead of migrating everyone to one new
+architecture, three tiers coexist permanently, each a genuinely
+different pipeline, gated by subscription plan:
 
-**§1-§7 are all done.** The only remaining item on the original
-roadmap is sourcing real RAG knowledge-card content (§5's own
-plumbing is done; the content is explicitly out of scope for
-MVP) — see "Suggested Build Order" at the bottom.
+| Tier | Pipeline | Speed |
+|---|---|---|
+| **Free** | Audio → STT → LLM (planner + response) → MCP → TTS | Slowest (today's cascade, already live) |
+| **Gold** | Audio → LLM (audio input, no separate STT) → MCP → TTS | Mid |
+| **Diamond** | Audio → LLM (Live API, speech-to-speech) → MCP → Audio | Fastest |
 
-## Current State (baseline)
-
-- ✅ REST API for users, birth profiles, partner profiles, conversations (Fastify + Mongoose).
-- ✅ Agent pipeline: planner → parallel MCP/RAG/memory execution → streaming response (OpenAI Responses API).
-- ✅ Conversation persistence, token-budgeted context window, rolling summarization, gap-aware resume.
-- ✅ **§1 (Astrology Engine & MCP Server) is fully done**: connected live to a real hosted server (`mcp.astrologyapi.com`) with dynamic tool discovery (111 real tools), a real argument resolver, `/ready` + reconnect/retry + circuit breaker, a working chart cache, transit/predictive queries, and multi-chart (partner profile) support for synastry — all verified against the live server, not just typechecked.
-- ✅ **§2 (Voice-to-Voice) is fully done**: real OpenAI STT/TTS/VAD, a working `@fastify/websocket` realtime gateway (the dead Socket.io `voice` module deleted), raw-binary-frame audio transport, voice-tuned response prompts, server-side barge-in, and speculative sentence-level synthesis for lower latency — verified end-to-end with a real running server and real audio, not just typechecked. The old `console.log`-placeholder state is gone.
-- ✅ **§3 (Persona System) is done (7/7)**: the agent picks its own mode (`companion`/`astrologer`/`blended`) per turn as part of the existing planner step, with a genuinely different response prompt per mode, light prompt-level hysteresis so it doesn't flip-flop, the mode exposed to the client via a new `turn:mode` event, persistence across turns, and (via §4) real cross-conversation relationship continuity — all verified live, including a real tonal comparison of the same question answered in two different modes.
-- ✅ **§4 (Memory) is done**: real MongoDB persistence, real LLM-based fact extraction, real OpenAI embeddings, real cosine-similarity semantic retrieval, and real dedup/reinforcement/decay — wired into the agent as a fire-and-forget post-turn step, gated by `ENABLE_MEMORY`. Verified live end-to-end: facts extracted from one turn were correctly recalled in a later turn, and the same fact restated across separate conversations reinforced one row instead of duplicating.
-- ✅ **§5 (RAG) is wired (not populated — deliberate MVP scope)**: real Mongo-backed knowledge cards, real embedding-based cosine-similarity retrieval, real reranking, wired into the agent and gated by `ENABLE_RAG` — verified live with one seeded test card. No actual astrology knowledge content exists yet by design; `rag.retrieve()` correctly returns `[]` in production until content is authored.
-- ✅ **§6 (Platform, Security & Production Readiness) is done**: real JWT auth (register/login, REST + WebSocket, ownership-checked) replacing the previous "any request can touch any user's data" gap, CORS, two-tier rate limiting (REST + a dedicated LLM-turn limiter), dead Express/Socket.io scaffolding removed (also clearing 3 `npm audit` vulnerabilities), real Prometheus metrics + lightweight span tracing, a real cascading account-deletion endpoint backing a new `PRIVACY.md`, and an accurate `README.md` — all verified live, including a full authenticated chat turn end-to-end.
-- ✅ **§7 (Testing & Quality) is done**: Vitest, 60 tests across unit (pure logic)/integration (real in-memory Mongo)/e2e (real Fastify app + real WebSocket protocol, real Mongo, only the paid LLM call faked) — full suite runs in under 2 seconds for zero API cost. Every test suite is now the fast, repeatable substitute for the throwaway live-verification probe scripts used throughout §1-§6.
+We go step by step. Each step gets checked off (`- [x]`) here once
+it's actually done and **verified live** — not just written or
+typechecked. This integration has already hit real, live-only
+surprises (three rejected TTS mime types in a row, then a JSON
+markdown-fence bug) purely from assumptions that looked right on
+paper — assume every new step here needs the same live check before
+being trusted.
 
 ---
 
-## 1. Astrology Engine & MCP Server
+## External services / new dependencies
 
-- [x] **Stand up the real Astrology MCP server.** ~~Nothing in this repo actually computes a chart yet~~ — **resolved**: a real MCP server was already live at `mcp.astrologyapi.com` (`vr-mcp-server`), with credentials already sitting in `.env`. Verified by connecting live and calling `listTools()` (111 real tools). No server needed to be built.
-  - [x] Sourcing strategy: hosted provider, already running — confirmed live, so the self-hosted Swiss Ephemeris alternative isn't needed.
-  - [x] Switch from the hardcoded `tool-catalog.json` to dynamic discovery via `astrologyMcpClient.listTools()` — **done**. `syncAstrologyToolsFromServer()` (`mcp.tool-sync.ts`) replaces the registry with the live catalog at boot, right after `connect()`, falling back to the bundled static JSON only if the sync call itself fails. `PlannerService` now reads tools through a live getter instead of a frozen boot-time snapshot. Verified: registry went from 55 → 111 tools after sync.
-- [x] **Fix `McpArgumentResolver` — found while verifying the item above.** It resolved the old fictional field names, but the real live tools use provider-specific ones — **done and verified with a real live tool call**: rewrote the resolver around a canonical field mapper (`birth-profile.mapper.ts`) that decomposes a `BirthProfile` into every shape the real schemas need (`day/month/year/hour/min/lat/lon/tzone`, `place`, `country_code`, etc.), handles both two-person prefix conventions actually used live (`m_`/`f_` for matchmaking, `p_`/`s_` for composite/synastry charts — neither was `boy_`/`girl_` as originally assumed), parses free-text `timeOfBirth` ("13:02" or "1:02 PM"), and computes a DST-aware UTC offset from `timezone` (treated as an IANA zone name) using native `Intl` — no new dependency. Legacy fictional field names are kept as aliases so the static-catalog fallback path still works if live sync ever fails. Verified live: `planets`, `basic_panchang`, `geo_details`, `timezone`, `numero_table`, `numerological_numbers`, `lunar_metrics`, `match_ashtakoot_points`, and `composite_horoscope` all resolve with zero missing arguments, and a real `planets` call against the live server returned actual planetary positions. Tools needing caller-supplied context beyond a birth profile (`global_transits` date range, dasha drill-down IDs like `sub_vdasha`'s `md`) correctly still report exactly what's missing — that's expected, not a bug.
-- [x] Add MCP connectivity to the `/ready` health check — **done**. `AstrologyMcpClient` gained a real `ping()` method using the MCP protocol's own `ping` request (not just the cached `connected` flag), matching how `MongoDatabase.ping()`/`RedisDatabase.ping()` already verify actual reachability. `/ready` now checks Mongo + Redis + MCP together and reports `astrologyMcp` in the dependency breakdown. Verified live: `false` before connect, `true` after connect, `false` after disconnect.
-- [x] Add reconnect/retry + circuit-breaker behavior to `AstrologyMcpClient` — **done**. The SDK's `Client.onclose`/`onerror` callbacks now actually flip `connected` back to `false` on an unexpected drop (previously it stayed wrongly `true` forever, so `ensureConnected()` never noticed). `connect()` now retries once with backoff before giving up, and a circuit breaker opens after 3 consecutive fully-exhausted `connect()` calls (30s cooldown, fails fast — no network attempt — while open) so a sustained outage doesn't add multi-second latency to every request. Found and fixed a real bug while verifying: `StreamableHTTPClientTransport` refuses a second `start()` on the same instance, so the first retry implementation silently never actually retried (it just hit an SDK "already started" guard error) — fixed by building a fresh transport per attempt. Also bounded `connect()` itself by `timeoutMs` (it wasn't before, unlike `callTool`/`ping`), so a network black-hole can't hang a retry indefinitely. Verified live: real connect/ping/disconnect still clean; against an unreachable host, attempts 1-3 each do a genuine fresh attempt (~500ms each), attempt 4 fails instantly via the open circuit.
-- [x] Decide chart caching strategy in `McpCache` (Redis-backed) — **done**. `McpCache` (get/set/delete, sha256-hashed key of `toolName + resolved arguments`) already existed fully built but was never called anywhere — wired it into `McpExecutor` now: check cache before every live tool call, write through only on success (never cache a failure). **Invalidation on birth-profile edits turned out to be a non-issue**: since the cache key is content-addressed from the resolved argument *values* (day/month/year/hour/min/lat/lon/tzone, ...), an edited birth profile naturally produces a different key — the old entry is just never looked up again and expires on its own; no explicit invalidation needed. TTL policy: 30 days for the vast majority of tools, since they're pure functions of explicit date/time arguments (same birth data always gives the same chart) — except tools whose name implies "as of right now" (e.g. `current_vdasha`), which can legitimately return a different result for the same birth details as time passes even with no explicit "now" argument, so those get 1 hour instead. Cache reads/writes are best-effort (a Redis hiccup logs a warning and falls through to a live call rather than breaking execution). Verified live: first call to `planets` took 186ms (real API call); identical second call took 46ms with zero live calls and byte-identical content; Redis key confirmed with a 2,592,000s (30-day) TTL.
-- [x] Support **transit/predictive** queries (not just natal charts) — **done**. The planner's output schema gained `mcp.targetDate`/`mcp.targetRangeDays` (nullable), and its prompt now includes the current date (previously missing entirely, so it had no way to resolve "this week"/"today") plus guidance on when to set them (transit/period questions) vs. leave null (ordinary natal-chart questions). A new `buildTargetDateExtras()` (`target-date.mapper.ts`) translates that single canonical date/range into the different provider-specific parameter names various tools actually want (`dasha_date`, `start_date`/`end_date`, `varshaphal_year`, `solar_year`) — these flow through the argument resolver's pre-existing `extras` mechanism (highest priority, already built, just never fed anything). Hit two real bugs while verifying live: (1) adding the new fields with no example JSON in the prompt made the model abandon the schema entirely on 3/3 attempts (nested `mcp: [{tool, parameters}]`, top-level `targetDate`, booleans for `rag`/`memory`) — fixed by adding an explicit output-shape skeleton to `planner.prompt.ts`, which also fixed reliability for the *existing* fields, not just the new ones; (2) `global_transits` rejected ISO dates outright ("Astrology API responded with HTTP 405 ... provide dd-mm-yyyy") even though `dasha_date` accepts ISO fine on other tools — the provider isn't self-consistent, so `start_date`/`end_date` are now formatted `dd-mm-yyyy` specifically while `dasha_date` stays ISO. Verified live end-to-end: `global_transits` now returns real upcoming transit events; a live planner call for "What does my week look like astrologically?" correctly set `targetDate: today, targetRangeDays: 7` and picked the real tool `natal_transits_weekly`; "Tell me about my career based on my birth chart" correctly left both null and picked natal tools (`vedic_horoscope`, `jaimini_details`) — all three tool names confirmed real against the live catalog, not invented.
-- [x] Multi-chart support — **done**. New `partner-profile` module (mirrors `birth-profile`'s structure exactly — types/model/repository/service/controller) but scoped 1:1 to a *conversation* rather than a user, since a partner isn't an account holder, just data the user supplies about someone else: `POST/GET/PATCH/DELETE /conversations/:conversationId/partner-profile`. Wired end-to-end: `ContextBuilder` fetches it alongside the birth profile, `ContextWindowBuilder`/the response prompt surface it, the planner prompt gets a `PARTNER PROFILE AVAILABLE: yes/no` line plus a rule to avoid selecting matchmaking tools (and ask the user for partner details instead) when none is attached, and the orchestrator passes it through to `AstrologyService.executeTools()` as `partner`. Caught a real bug while wiring: I'd named the orchestrator's field `partnerProfile`, but `AstrologyExecutionInput` actually reads `input.partner` — since this crosses a *structural* interface (not a literal object assigned directly to the typed slot), TypeScript's excess-property check doesn't catch a wrong field name like that, so the partner data would have silently gone nowhere. Verified live end-to-end against real Mongo + the live MCP server: created a user/birth profile/conversation, confirmed attaching a partner profile to a nonexistent conversation and a duplicate attach both fail with clear errors, confirmed `ContextBuilder`/`ContextWindowBuilder` correctly surface it, and ran a real `match_ashtakoot_points` compatibility calculation that returned genuine synastry results (varna, vashya, ... koot points) — cleaned up all test records afterward.
-
-## 2. Voice-to-Voice (STT / TTS / Realtime Audio)
-
-Everything here is a stub today (`VoiceService`, `STTClient`, `TTSClient`, `VoiceActivityDetector` all just log and return placeholders). This is the biggest actual feature gap.
-
-- [x] **STT**: wire `STTClient` to a real provider — **done**. Uses OpenAI `gpt-4o-mini-transcribe` (cheap tier; unlike `whisper-1` it supports streaming), reusing the existing `LLM_API_KEY` — no new credential. Both `transcribe()` (batch) and `transcribeStream()` (yields `transcript_delta`/`completed` events, mirroring the existing `LlmClient.stream()` pattern) are implemented, via the SDK's `toFile()` helper to wrap the raw audio `Buffer` (format explicit via `STTOptions.format`, since OpenAI needs a real container format, not headerless PCM). Model configurable via `STT_MODEL` env var. Verified live end-to-end at minimal cost: generated a short real speech clip via TTS, ran it through both batch and streaming transcription, both correctly round-tripped the original sentence (12 delta chunks streamed correctly for the streaming path).
-- [x] **TTS**: wire `TTSClient` to a real provider — **done**. Uses OpenAI `gpt-4o-mini-tts` (cheapest tier that still supports streaming), reusing `LLM_API_KEY` — no new credential. `synthesize()` (batch, full `Buffer`) and `synthesizeStream()` (`stream_format: "audio"`, reads `response.body` via `getReader()`, yields `audio_chunk`/`completed`/`error` events) both implemented. Model configurable via `TTS_MODEL` env var. Verified live: streaming genuinely delivers audio early — first chunk arrived at 1.66s while full synthesis took 2.5s (44 chunks total) — and, as a correctness check, fed the reassembled streamed audio back through the STT client from the previous task: it transcribed back to the original sentence correctly, confirming the streamed bytes are valid, uncorrupted audio and not just "chunks arriving."
-- [x] **VAD**: replace the placeholder `VoiceActivityDetector.isSpeech()` — **done**. Implemented as a local, dependency-free **energy-based VAD** (RMS per PCM frame against an adaptively-tracked noise floor, updated only during silence so a sustained loud voice can't drag the threshold up) — not a neural model (Silero VAD via `onnxruntime` was considered but deferred: real cost/risk here is a native binary dependency + bundling a model file, not API cost, since VAD must run locally regardless of provider). `isSpeech()` keeps the original per-frame signature (drop-in compatible); new `processFrame()` adds stateful utterance tracking (`speech_start`/`speech_end` events) for barge-in, with hangover to avoid cutting off mid-sentence on an ordinary pause. Caught and fixed a real bug via testing: the first hangover implementation counted raw *frames*, with no notion of real time — against real generated speech (not just silence), natural pauses between words caused spurious mid-sentence `speech_end` events. Fixed by tracking accumulated silence in **milliseconds** (frame duration derived from `sampleRate`) instead of a frame count, then tuned the default hangover to 500ms after observing real comma-pause silence up to ~387ms in test speech. Verified live: zero false positives across silence and simulated quiet-room noise floor, and exactly one correctly-positioned start/end pair on real synthesized speech across repeated runs.
-- [x] Extend the realtime protocol with audio event types — **done**. Added to `realtime.types.ts`, mirroring the existing text protocol's start/delta/completed/error/cancelled symmetry: client → server `audio:start`, `audio:chunk`, `audio:end`; server → client `audio:transcribed` (what STT heard), `audio:delta` (synthesized audio chunk), `audio:completed`, `audio:error`, `audio:cancelled`. Typed payload interfaces (`AudioStartPayload`, `AudioChunkPayload`, `AudioTranscribedPayload`, `AudioDeltaPayload`) added for gateway code to cast against, matching the existing pattern where `parseClientEvent` only validates the envelope (type/requestId), not per-type payloads. Audio bytes travel as base64 inside the existing JSON envelope for now — explicitly *not* a final wire-format decision, since "decide audio transport format/codec" is still its own open item below and may replace this with raw binary frames later. Verified: `parseClientEvent` correctly parses all three new client event types, and a real audio buffer round-trips through base64 encode/decode byte-for-byte. This is types/protocol only — no gateway handler wiring yet, that's the next item.
-- [x] Delete the orphaned `voice.gateway.ts` / `voice.controller.ts` / `voice.service.ts` / `voice.types.ts` — **done**. Deleted the whole confirmed-dead `modules/voice` directory (grepped first to confirm zero references anywhere). Real audio handling now lives in `realtime.gateway.ts`/`realtime.service.ts` — the one real transport — not a second parallel one.
-- [x] Pipe STT output through **existing** `AgentOrchestrator.streamTurn` — **done, and this is the first real end-to-end voice-to-voice verification of the whole session.** `RealtimeService` gained `processAudio()` (mirrors `processText()`'s structure exactly): buffers `audio:chunk`s between `audio:start`/`audio:end` in the session, transcribes the full buffer via `STTClient`, emits `audio:transcribed`, feeds the transcript into `agentService.streamTurn({..., inputType: "voice"})` — the *exact same* pipeline as text, so voice turns get the same persistence/context-window/summarization behavior for free — then synthesizes the full reply via `TTSClient.synthesizeStream()` and streams `audio:delta` chunks back. Kept synthesis as one full-reply call rather than per-sentence — partial/speculative synthesis for lower latency is a separate, later item. `realtime.gateway.ts` wires `audio:start` (reset buffer)/`audio:chunk` (base64-decode, append)/`audio:end` (run `processAudio`, stream results) using the audio events added in the previous task. **Verified with a real, full end-to-end test**: booted the actual server, created a real user/birth-profile/conversation via REST, connected a real WebSocket client, sent real synthesized speech ("What is my sun sign?") in chunks — got back an accurate transcript, then 297 real `audio:delta` chunks (~308KB of genuine synthesized audio) and a clean `audio:completed`, zero errors. Along the way this caught and fixed a real **pre-existing** bug unrelated to voice work: `agentPlanSchema`'s `rag.topK`/`memory.topK` required `>= 1` unconditionally, but the model naturally returns `0` when `required: false` — the planner had been silently capable of failing on any turn where RAG/memory weren't needed; relaxed to `>= 0` (a topK of 0 when not required is never actually used downstream, since orchestrator already gates the retrieve calls behind `required`).
-- [x] Tune `ResponseService`/prompt for voice — **done**. `AgentTurnInput.inputType` existed but nothing downstream ever read it — threaded it through the whole pipeline for the first time: `ContextBuilder.build()` → `AgentContext.inputType` → `ContextWindowBuilder` → `PromptContextWindow.inputType` → `ResponseService.buildPrompt()`, which now injects an explicit per-turn note when `inputType === "voice"` telling the model this reply becomes spoken audio (no markdown/headers/lists/asterisks, short and conversational). Verified live with a direct before/after comparison on the same question: text-mode response used a numbered markdown list and bold headers (1443 chars); voice-mode response was plain natural prose with zero markdown (528 chars) — same underlying facts, genuinely different delivery.
-- [x] Handle interruptions end-to-end (server side) — **done**. The abort mechanism already existed and worked (`AbortController` per turn); what was missing was the client-facing signal knowing *which* stream got cut. Added `RealtimeSessionContext.activeTurnType` ("text" | "audio"), set when a turn starts and returned by `RealtimeService.cancel()`, so `realtime.gateway.ts`'s `chat:cancel` handler now acks with the correctly-typed event — `audio:cancelled` if an audio turn was interrupted, `chat:cancelled` for text — added in the previous task's protocol extension. Actually stopping client-side audio *playback* is inherently the client's job; this is as far as the backend's responsibility goes. Verified live with an event-driven test (cancel sent the instant the first real `audio:delta` arrives, not a guessed timeout): TTS streaming had genuinely started (1 real chunk received) when cancelled, zero further `audio:delta` chunks arrived afterward, `audio:completed` never fired, and the ack was correctly `audio:cancelled`. Noted but deliberately left alone: the ack currently arrives twice (once as gateway's immediate response, once from the turn's own generator noticing the abort) — confirmed this exact double-ack pattern already existed for text cancellation before this task touched anything, so it's a pre-existing, harmless quirk, not something introduced here or in scope to fix now.
-- [x] Decide audio transport format/codec — **decided and implemented**: raw binary WebSocket frames for audio data, JSON text frames for everything else (control events + lifecycle markers). WebRTC (ICE/STUN/TURN, SDP negotiation, browser-specific APIs) is a real lift for a marginal latency win at MVP stage, so not worth it yet — matches the roadmap's own framing. Replaced the initial base64-in-JSON approach (explicitly flagged as provisional when the protocol was first extended) since it's a small, contained change with a real win: removes ~33% base64 overhead and JSON stringify/parse cost on the highest-frequency messages on the socket. `audio:chunk` (client→server) and `audio:delta` (server→client) JSON event types are gone entirely — client now sends raw binary WS frames directly after `audio:start` (gateway detects via `ws`'s `isBinary` flag), and `processAudio()` yields a `RealtimeOutboundMessage` union (`ServerEvent | Buffer`) so the gateway sends binary frames raw and JSON events stringified. Verified live end-to-end: sent real input audio as raw binary frames (no base64), got back 136 raw binary output frames (211KB of genuine synthesized audio) with zero `audio:delta` JSON envelopes — only 3 JSON messages total for the whole turn (session:ready, audio:transcribed, audio:completed).
-- [x] Latency budget: measure and optimize — **done**. Implemented speculative/partial synthesis exactly as the roadmap suggested: `processAudio()` no longer waits for the full agent reply before synthesizing — a new `popReadySentence()` (unit-tested: 6/6 cases including punctuation edge cases) pulls each complete sentence off the streaming text buffer as it arrives, and a new `synthesizeSentence()` helper (using `yield*` delegation so its `true`/`false` return value tells the caller whether to keep going) immediately synthesizes and streams that sentence's audio while the LLM keeps generating the rest — a real pipeline, not a cosmetic reorder. Also added structured per-stage timing (`sttMs`, `timeToFirstTextDeltaMs`, `timeToFirstAudioChunkMs`, `totalTurnMs`) logged at the end of every audio turn, satisfying the "measure" half directly. Verified live, twice, with a genuinely multi-sentence response: **first audio chunk arrived at 6744ms / 5584ms while full completion took 12422ms / 12795ms — first audio ~45-55% faster than waiting for the complete reply**, consistent across runs. (One test-harness note, not a code issue: my verification script discarded the spawned server's own stdout, so I couldn't visually inspect the new timing log line directly — but the client cleanly receiving `audio:completed` afterward is only reachable if that logging call ran without throwing, which is sufficient confirmation it works; the actual latency numbers were measured client-side regardless.)
-
-## §2 (Voice-to-Voice) is now fully complete.
-Every item verified live against the real OpenAI APIs and a real running server — full voice-to-voice loop, barge-in, binary transport, and speculative synthesis all confirmed working, not just typechecked.
-
-## 3. Persona System — Friend *and* Astrologer, Self-Switching
-
-**Done — 7/7 (the 7th landed via §4, Memory, as planned).** Everything verified live: real planner mode selection across message types, real hysteresis, real response-tone differences, real end-to-end delivery to a WebSocket client, and real cross-conversation relationship continuity.
-
-- [x] Define the persona modes explicitly — **done**. `AgentPersonaMode` (`planner.types.ts`): `"companion"` (casual, friend-like), `"astrologer"` (structured chart interpretation), `"blended"` (the default/common case — most real messages are personal *and* astrology-adjacent at once).
-- [x] **Let the agent choose the mode itself, per turn** — **done**. Added `personaMode` to `agentPlanSchema`/`AgentPlan`, decided in the same structured-planning step as MCP/RAG/memory. Critically, also updated the planner's explicit output-format skeleton to include it (learned this lesson the hard way during §1/§2: an LLM output schema field added without updating the example skeleton risks the model drifting off-schema entirely, not just on the new field). Verified live: "Hey, how's it going?" → `companion`; "Give me a detailed technical breakdown of my natal chart" → `astrologer`; "I'm anxious about my job interview" → `blended` — all matched expectations exactly across real API calls.
-- [x] Write distinct prompt fragments per mode, composed dynamically — **done**. `response.prompt.ts` rewritten from one static constant to `buildResponseSystemPrompt(mode)`: a shared base (the original rules — never invent calculations, distinguish "what the chart shows" vs. "traditional interpretation", etc.) plus a mode-specific fragment selected per turn. `ResponseService` now calls it with `plan.personaMode` instead of a fixed prompt. Verified live with the *same* question ("What does my sun in Gemini mean?") in both modes: astrologer mode explicitly separated "technically, this shows..." vs. "traditionally interpreted as..." and closed with a report-style summary; companion mode was warmer throughout and closed with an engaging follow-up question — a genuine tonal difference, not cosmetic.
-- [x] Mode-appropriate moment detection — **done**, folded into the planner prompt work above (same guidance that produces correct mode selection also covers this).
-- [x] Relationship continuity as a first-class profile (name, how they like to be addressed, recurring life topics, emotional baseline) — **done via §4 (Memory)**, exactly as this roadmap already called out (that section's own deferral note is preserved above for history). Real fact extraction/storage/retrieval now makes this work across conversations, not just within one — verified live: a user's name and life details introduced in one conversation were correctly recalled and woven into responses both later in that same conversation and in a separate one.
-- [x] Tone/style guardrails per mode — **done**, written directly into each mode fragment rather than as a separate pass (same piece of work): companion mode guards against overpromising certainty and against diagnosing serious issues; astrologer mode guards against being cold/robotic and against deterministic fate language; blended inherits both.
-- [x] Expose current mode to the client — **done**. Went with the "event" option (not a metadata field bolted onto an existing event) since mode is decided *before* response generation starts, not alongside it: `AgentOrchestrator.streamTurn()` now yields a `{type: "plan", personaMode, responseMode}` event as the very first thing, before MCP/RAG execution or response streaming, which `RealtimeService` translates into a new `turn:mode` server event (one shared event for both text and voice turns, not separate `chat:mode`/`audio:mode` variants, since it's pure metadata with no channel-specific behavior). Verified live over a real WebSocket connection: `turn:mode` arrived with `{"personaMode":"companion","responseMode":"direct"}` for a greeting and `{"personaMode":"astrologer","responseMode":"mcp_rag"}` for a technical request, correctly ahead of the reply itself.
-- [x] Decide mode persistence/hysteresis — **decided and implemented**: light, prompt-level hysteresis, not a hard mechanical rule (consistent with how the rest of the planner already works — structured LLM judgment, not brittle deterministic switches). Added `Conversation.lastPersonaMode`, persisted fire-and-forget after each turn (same pattern as rolling summarization), and fed back into the next turn's planner prompt as `PREVIOUS MODE` with guidance to stay on it unless the message clearly calls for something else. Verified live: an ambiguous follow-up ("tell me more") after a `blended`-mode turn correctly stayed `blended` rather than randomly re-rolling.
-
-## 4. Memory (long-term personalization)
-
-**Done — 7/7.** Required for both the "friend" (remembers your life) and "astrologer" (remembers your chart context, past readings, recurring questions) halves of the persona. Everything verified live: real fact extraction, real OpenAI embeddings, real Mongo persistence, real semantic retrieval surfacing stored facts in a later turn, and real dedup/reinforcement across separate conversations.
-
-- [x] Replace the in-memory `Map`-based `MemoryRepository` with real MongoDB persistence — **done**. New `MemoryItem` Mongoose model/schema (`memory.model.ts`) with `userId`, `fact`, `category`, `embedding`, `importance`, `referenceCount`, `sourceConversationId`, `lastReferencedAt`, indexed on `{userId, importance, lastReferencedAt}`. `MemoryRepository` now does real `create`/`findByUserId` (capped + ranked candidate set for search)/`reinforce`, replacing the old `Map`.
-- [x] Implement `MemoryExtractor.extractFacts()` for real — **done**. LLM-based extraction (`memory.extractor.ts`), same generate → `JSON.parse` → zod-validate pattern as `ConversationSummarizer`, given both the user's message and the assistant's reply per turn. Explicit prompt rules distinguish durable, cross-conversation facts (identity, preferences, relationships, life events, recurring topics) from one-off/computed astrology content that should NOT be remembered — most turns correctly extract nothing. Best-effort: any failure (bad JSON, schema mismatch, network error) is caught and logged, returning `[]` rather than breaking the turn.
-- [x] Implement `MemoryRetriever.retrieve()` for real — **done**. Real embedding-based semantic search: embeds the query, fetches the user's memory candidates, ranks by cosine similarity (with a small time-decayed-importance tiebreaker from the consolidator), returns the top K as `MemoryResult[]`. Best-effort — a failure returns `[]`, same as having no memories yet, rather than breaking the turn.
-- [x] Wire real embeddings — **done**. New `OpenAiEmbeddingClient` (`infrastructure/embeddings/embedding.client.ts`) replaces the fake `[0.1, 0.2, 0.3]` stub, using OpenAI `text-embedding-3-small` (cheapest tier, new `EMBEDDING_MODEL` env var) and reusing `LLM_API_KEY` — no new credential. **Vector index decision**: brute-force in-application cosine similarity (`shared/utils/vector.ts`) over a capped, importance/recency-ranked candidate set, NOT Mongo Atlas Vector Search — even though the cluster is Atlas and could support it. Reasoning: at MVP scale a single user's memory count is in the dozens/hundreds, not millions, so scanning and ranking in Node is effectively free, while provisioning/polling a managed Atlas Search vector index adds real complexity (index build time, eventual consistency) for no measurable benefit yet. Documented as a deliberate scale trade-off, not a shortcut — revisit if per-user memory counts grow into the thousands.
-- [x] Implement `MemoryConsolidator` — **done**. Two responsibilities: (1) `findDuplicate()` — write-path dedup, cosine-similarity threshold (`MEMORY_DUPLICATE_SIMILARITY_THRESHOLD`, default 0.88) against existing memories; a match reinforces (`importance += 1`, `referenceCount += 1`, `lastReferencedAt` reset) instead of inserting a near-duplicate row. (2) `decayedImportance()` — read-path exponential decay, 60-day half-life computed from `lastReferencedAt`, applied only as a ranking tiebreaker (not a stored mutation, so no batch job needed) — a fact that keeps getting reinforced never decays in practice since each reinforcement resets its clock. **Verified live**: the same fact ("I'm Rohan") restated in two separate conversations for the same user produced exactly one memory row, `importance` 5→6 and `referenceCount` 1→2 — confirmed via a direct Mongo query, not just absence of an error.
-- [x] Wire the whole module into `AppContainer` — **done**. `container.ts` now constructs the real `MemoryRepository`/`MemoryExtractor`/`MemoryRetriever`/`MemoryConsolidator`/`MemoryService` and the new `OpenAiEmbeddingClient`, replacing the inline no-op placeholder. `AgentOrchestrator`'s `memory` dependency gained `extractAndStore()` alongside the existing `retrieve()`, called fire-and-forget after a successful turn (same pattern as `updatePersonaMode`/`maybeSummarize`) so extraction never blocks or slows down the response the user sees.
-- [x] Respect the existing `ENABLE_MEMORY` feature flag — **done**. `container.ts` branches on `config.features.enableMemory`: when true, both the context-builder's `memoryRetriever` and the orchestrator's `memory` dependency point at the real `MemoryService`; when false, both get a no-op (`retrieve` → `[]`, `extractAndStore` → no-op) so every call site behaves like "no memories yet" without needing its own flag check.
-
-**Bug found and fixed while verifying live** (pre-existing, not introduced by this work, but only surfaced once memory retrieval was real instead of a stub that always returned `[]`): the planner prompt listed `responseMode` values as `direct | mcp | rag | mcp_rag` but never explicitly said a memory-only turn (memory required, MCP/RAG not) still maps to `"direct"` — the model twice invented `"responseMode": "memory"` for "do you remember what I told you?"-style questions, which isn't a valid enum value and failed the plan schema. Fixed by adding explicit rules to `planner.prompt.ts` clarifying memory is an independent axis, not a `responseMode` value. Verified live, twice, after the fix: the same message now correctly plans `responseMode: "direct"`, `memory.required: true`, and the response genuinely recalled the stored fact ("Yes, I remember you shared that you're feeling a bit nervous about your upcoming wedding this December...").
-
-**Full live verification**: created a real user/birth-profile/two conversations via REST, connected a real WebSocket client. Turn 1 ("Hi, I'm Ananya... getting married this December... what's my sun sign") correctly extracted and stored three separate facts (`identity`: name, `life_event`: wedding, `preference`: nervousness) with real 1536-dim embeddings. Turn 2 in the same conversation ("Do you remember what I told you about my life recently?") correctly retrieved and wove those facts into a genuinely personal reply. A second, separate probe confirmed the dedup/reinforcement path across conversations (above). All test records cleaned up from Mongo afterward.
-
-Note for §3: this closes the "relationship continuity" item that was deliberately deferred here — identity/relationship/preference facts are now genuinely remembered and retrieved across turns and conversations, not just within a single conversation's summary.
-
-## 5. Knowledge Base / RAG
-
-**Wired, not populated — deliberate MVP scope.** Needed so the "astrologer" side can eventually explain *meaning*, not just recite calculated positions, but per explicit instruction: **not building actual RAG content for MVP.** The plumbing is real end-to-end (verified live); the knowledge-card collection is intentionally empty, so `rag.retrieve()` returns `[]` in production today — that's the correct behavior for "no content yet," not a stub limitation.
-
-- [x] Replace stub `RAGRetriever`/`RAGReranker`/`KnowledgeCardRepository` with real implementations — **done**. `KnowledgeCardRepository` is now a real Mongoose-backed repository (replacing the `Map`). `RAGRetriever` does real embedding-based cosine-similarity search over knowledge-card candidates, same brute-force approach as `MemoryRetriever` (see §4's vector-index-scale note — applies here too) and reusing the same `OpenAiEmbeddingClient`. `RAGReranker` does a real (if intentionally simple) dedupe-by-content + sort-by-score pass — a learned/LLM reranker is deferred since there's nothing yet for it to meaningfully reorder, and it would add a paid LLM call per RAG turn for no benefit until real content exists.
-- [ ] Source and structure actual astrology knowledge content — **deliberately out of scope for MVP**, per explicit instruction. `KnowledgeCardService.createCard()` exists and is real (embeds + persists), ready for whenever content is authored.
-- [ ] Implement the seed script for real — **deliberately deferred alongside content sourcing** (`scripts/seed-knowledge-cards.ts` still logs a placeholder); there's nothing to seed yet.
-- [x] Wire real embeddings + vector search — **done**, sharing the exact same `OpenAiEmbeddingClient`/`EMBEDDING_MODEL` infra as §4 (Memory), as planned.
-- [x] Wire into `AppContainer` — **done**. `container.ts` now constructs the real `KnowledgeCardRepository`/`RAGRetriever`/`RAGReranker`/`RAGService`, replacing the inline no-op placeholder, and passes it to the agent orchestrator as the `rag` dependency (`retrieve(queries, topK)`, matching the interface the orchestrator already expected).
-- [x] Respect `ENABLE_RAG` feature flag — **done**, same branching pattern as `ENABLE_MEMORY`: disabled → a no-op that always returns `[]`; enabled (the default) → the real service, which also returns `[]` today simply because the collection is empty.
-
-**Live verification** (proving the wiring is real, not that content exists — per the MVP scope above): seeded exactly one test-only knowledge card directly into Mongo with a real OpenAI embedding, then asked a question designed to trigger RAG ("What is a Saturn return and why does it matter?"). Confirmed via a temporary debug log (removed after): the planner correctly set `rag.required: true` with 3 sensible sub-queries, `RAGRetriever` correctly computed a real cosine-similarity score (0.608) against the seeded card, and the card's exact content was threaded into `results.rag` and on into the response prompt. The model's final reply didn't quote the seeded card's deliberately odd made-up term verbatim (it answered from general knowledge instead, which is a response-style choice, not a retrieval failure) — the mechanical proof is the debug log showing the real retrieval pipeline firing correctly end-to-end. Test card and all test records cleaned up from Mongo afterward.
-
-## 6. Platform, Security & Production Readiness
-
-**Done — 7/7.** Everything verified live, not just typechecked: real registration/login, real 401/403 enforcement on both REST and the WebSocket, a real end-to-end authenticated chat turn, real CORS headers, real rate-limit headers, a real cascading account deletion, and real Prometheus metrics + span tracing captured from an actual turn.
-
-- [x] **Auth** — **done**. New `modules/auth`: `POST /auth/register`/`POST /auth/login` (bcrypt-hashed passwords, `@fastify/jwt` tokens), an `app.authenticate` preHandler, and two ownership guards — `requireSelf("userId")` for user-scoped routes, `requireConversationOwnership(container)` for conversation-scoped ones (looks the conversation up and compares `userId`). Applied to every route that touches user data: users, birth-profile, partner-profile, conversations/messages. Also fixed two real trust-the-request-body holes found while wiring this: `POST /conversations/:id/messages` and `POST /conversations/:id/partner-profile` previously accepted `userId` straight from the JSON body — now both use `request.user.userId` from the verified token. The WebSocket gateway (`/ws?token=<jwt>`) verifies the token in a `preHandler` (query param, not a header, since browsers can't set custom headers on a WS upgrade) and derives `session.userId` from it — a client can no longer claim to be any user by just sending a different `userId` in `session:start`; `conversationId` ownership is checked against the token's userId on every `session:start`. Verified live: register → login (right/wrong password) → no-token 401 → cross-user REST 403 → cross-user WS session:start rejected without killing the connection → a real authenticated chat turn completing end-to-end with a genuine LLM reply.
-- [x] **CORS** — **done**. `@fastify/cors` registered in `app.ts` using the existing `CORS_ORIGIN` env var (default `*`) — safe with the token-in-header/query auth model here since there's no cookie-based session to be CSRF-vulnerable. Verified live: `Access-Control-Allow-Origin` header present on a real response.
-- [x] **Rate limiting** — **done**, two separate limiters for the two different shapes of traffic. `@fastify/rate-limit` on the whole REST API (`RATE_LIMIT_MAX`/`RATE_LIMIT_WINDOW_MS`, default 100/min) — verified live via the `x-ratelimit-limit` response header. A second, purpose-built per-user sliding-window limiter inside `RealtimeService` (`CHAT_RATE_LIMIT_PER_MINUTE`, default 20/min) for the actual cost-sensitive path — the realtime WebSocket isn't one HTTP request per turn, so the REST plugin can't see it. Verified with a pure unit check (no LLM cost): 3-per-minute limit correctly allowed exactly 3 calls then blocked the 4th/5th, with independent counters per user.
-- [x] Remove dead scaffolding — **done**. Deleted `express`, `socket.io`, `cors`, `@types/express`, `@types/cors` from `package.json` (95 packages removed) and the orphaned `src/shared/errors/error-handler.ts`. This also cleared 3 moderate `npm audit` vulnerabilities that lived entirely in the now-removed `express`→`body-parser`→`qs` chain — confirmed `npm audit` → 0 vulnerabilities afterward. `app-error.ts`'s `AppError` class survived, but is no longer dead: it's now genuinely used by the auth module and recognized by a new global-error-handler branch in `app.ts`.
-- [x] Real observability — **done**, with one deliberate, documented scope call. **Metrics**: `infrastructure/observability/metrics.ts` rewritten onto `@prometheus-io/client` (prom-client's own successor package — the original `prom-client` is deprecated in favor of it, caught and swapped during install) — real `Registry`, default Node process metrics, plus custom histograms/counters/gauge (`http_request_duration_ms`, `llm_request_duration_ms`, `mcp_tool_call_duration_ms`, `realtime_active_websocket_connections`, `agent_turns_total`, `rate_limited_turns_total`), wired into `llm.client.ts`, `mcp.executor.ts`, `agent.orchestrator.ts`, and the realtime gateway, exposed at `GET /metrics`. **Tracing**: `tracing.ts` rewritten as real (if intentionally lightweight) span tracing — traceId/spanId/parentSpanId/durationMs/attributes logged as structured Pino events — deliberately NOT the OpenTelemetry SDK, since a real OTel wiring needs an exporter destination (Jaeger/Honeycomb/Datadog/...) that's an infra/cost decision for whoever runs this in production, not something to pick silently; the span shape maps directly onto OTel if that's chosen later. Wired into `agent.orchestrator.ts` as one parent `agent.turn` span with three real children (`agent.planner`, `agent.execution`, `agent.response`). Verified live, twice: `agent_turns_total`/`llm_request_duration_ms` showed real non-zero samples after a real turn (once I fixed a race in my own test script — the `chat:completed` event is yielded mid-generator, before the orchestrator's trailing metrics/persistence code runs on the next resume — not a product bug), and all four span log lines (`span:agent.planner`, `span:agent.execution`, `span:agent.response`, `span:agent.turn`) appeared in the real server log from one real chat turn, in the correct order.
-- [x] Data privacy review — **done**. New `PRIVACY.md`: a table of what's stored and why, third parties data passes through (OpenAI, the astrology MCP provider), an honest "no automatic retention window exists yet, that's a product decision for later" note rather than a fabricated policy, and a real deletion mechanism. Built that deletion mechanism as part of this, since a privacy policy documenting deletion that doesn't actually work yet would be worse than not writing one: `DELETE /users/:userId` (self-only) now cascades through birth profile, partner profiles the user added, all conversations + messages, and memories, before deleting the account — implemented as `AppContainer.deleteUserAccount` (a container-level operation, not one module's service, since it's the one thing that legitimately spans every module's data) using new `deleteByUserId`/`deleteAllForUser` repository methods. Verified live: full before/after Mongo counts across all 5 collections went from populated to zero after one real DELETE call, a cross-user delete attempt correctly 403'd first, and a repeat delete on an already-deleted account correctly 404'd.
-- [x] `README.md` — **done**. Rewritten to match reality: Fastify not Express, accurate module list (including the modules that didn't exist when it was last touched — auth, memory, rag, realtime), setup steps with the actual required env vars, an API overview grouped by auth requirement, and a link to `PRIVACY.md`. Also fixed `package.json`'s equally stale Express/Socket.io description string while touching this area.
-
-**Bug found and fixed while verifying live** (introduced by this section's own work, caught before it shipped): the first version of the WebSocket ownership check called `socket.close(4003, "Forbidden")` after rejecting a `session:start` for a conversation the token's user didn't own — which killed the *entire connection* over one bad attempt, not just that one request. A legitimate client that simply referenced a stale/wrong `conversationId` (e.g. after switching conversations) would have been disconnected entirely rather than able to retry. Fixed to just reject that one `session:start` (the token is still valid, `session.conversationId` is simply left unset) — caught immediately because my own E2E probe's next step, sent on the same now-closed socket, hung waiting for a response that could never arrive. Separately, also found and fixed a minor correctness gap in the global error handler: it defaulted every non-`AppError` exception to HTTP 500, including Fastify's own client-error exceptions (e.g. malformed JSON body) which already carry a correct 4xx `statusCode` — now that status code is respected instead of being overridden to 500.
-
-## 7. Testing & Quality
-
-**Done — 4/4.** 60 tests across 9 files, full suite runs in under 2 seconds, zero real API cost. Every test was actually run (not just written) and verified passing before being counted done.
-
-- [x] Add a test runner — **done**. Vitest, not Jest: faster, ESM/TS-native (no `ts-jest`/babel config needed), and its `vitest.config.mts` is a handful of lines. `@types/node` was bumped from `^20` to `^22` to match Vitest 5's peer requirement (and the actual Node 22 runtime this project already runs on). `npm test`/`test:unit`/`test:integration`/`test:e2e`/`test:watch` scripts added.
-- [x] Unit tests for the pieces that don't need live infra — **done**, 54 tests: `formatDuration` (all duration bands), `cosineSimilarity` (identical/orthogonal/opposite/scale-invariant/mismatched-length/zero-vector edge cases), `MemoryConsolidator` (dedup threshold matching, exponential decay math including the half-life boundary), `agentPlanSchema` (valid plan, and explicit regression tests for the two real invalid-output bugs found live earlier this session — `topK: 0`, and the model inventing `responseMode: "memory"`), `McpArgumentResolver` (canonical field mapping, `m_`/`f_` pair-prefix resolution, missing-required reporting, extras priority, `resolveOrThrow`), `ContextWindowBuilder` (message dedup against the current turn, token-budget trimming keeps the newest messages in order, hard-truncates a single over-budget message rather than dropping it, memory capping, resume/prior-conversation notes), and `popReadySentence` + the new chat rate limiter's counting logic (§6).
-- [x] Integration tests against real Mongo for the conversation/summarization flow — **done**, `mongodb-memory-server` (a real, if ephemeral, MongoDB — not a mocked driver) plus a fake `LlmClient` standing in only for the paid OpenAI call. 4 tests: below-threshold backlog does NOT summarize, above-threshold backlog DOES (and the real persisted message content demonstrably reached the fake LLM call, proving the pipeline wiring rather than a canned pass), persona-mode persistence round-trips through real Mongo, and an empty assistant reply is correctly not persisted.
-- [x] End-to-end smoke test for a full turn — **done**, and more thorough than the original one-line description: a real `createApp()` Fastify instance (not a stub), real in-memory Mongo, a real listening HTTP+WebSocket server on an ephemeral port, real `/auth/register` → real birth-profile/conversation creation → real token-authenticated WebSocket connection → two real `chat:send` turns through the real `AgentOrchestrator`/`PlannerService`/`ResponseService` (only the LLM call faked) → real Mongo query confirming exactly the right messages were persisted → polling for a real summarization to complete and land in Mongo with the expected content → plus a second test confirming a tokenless WebSocket connection is rejected (§6's auth enforcement, exercised here too).
-
-**Bug found and fixed while building this** (real, pre-existing, unrelated to this section — surfaced only because a real assertion checked real Mongo state instead of trusting the WS response): my first E2E test attempt asserted the persisted message count immediately after receiving the `chat:completed` WebSocket event and got 3 messages instead of 4. Root cause: `chat:completed` is yielded mid-generator inside `AgentOrchestrator.streamTurn`, *before* the trailing `recordAssistantTurn` persistence call runs (which happens on the next generator resume) — the same class of race already documented in §6's metrics verification, now also written down here since it's a real, reproducible timing gap between "client sees completion" and "assistant message durably persisted," not just a test artifact. Fixed the test by polling for the expected message count instead of asserting immediately; the underlying orchestrator behavior itself is correct (production code does `await recordAssistantTurn` before considering the turn fully done for persistence purposes) and wasn't changed. Also fixed, as a drive-by while working in the repositories this section's Mongo integration tests exercised: four repositories (`user`, `birthProfile`, `conversation`, `partnerProfile`) used Mongoose's deprecated `{ new: true }` option on `findOneAndUpdate`, printing a warning on every update — replaced with the documented `{ returnDocument: "after" }` equivalent, no behavior change.
+- **Gemini Live API** (`ai.live.connect()`, `@google/genai`) — powers
+  Diamond tier. Same Gemini account/`GEMINI_API_KEY` already in use;
+  a different API surface (a persistent bidirectional session, not
+  request/response) with different, likely higher, per-minute
+  billing. Model name candidates seen in the SDK's own examples
+  (`gemini-live-2.5-flash-preview`, `gemini-2.0-flash-live-preview-
+  04-09`) — **do not trust these as final**; reconfirm against the
+  live SDK/docs when Phase D actually starts, the same way
+  `gemini-3.1-flash-tts-preview`'s accepted format turned out to
+  differ from what any doc excerpt suggested.
+- **Gemini audio-input on `generateContent`** (Gold tier) — no new
+  service or credential, just a different call shape (an inline
+  audio `Part` alongside the text prompt) on the client we already
+  have.
+- **`react-native-webrtc`** (app only, Diamond tier, conditional) —
+  only needed if Diamond's transport decision (see Phase D) picks
+  direct client↔Gemini WebRTC over a server-proxied WebSocket.
+  Requires a prebuild/rebuild cycle like any native module here.
+- **A payment/subscription/billing provider** (Stripe, Razorpay, or
+  similar) — needed eventually to actually let users buy/upgrade a
+  plan. **Explicitly out of scope for this roadmap.** Everything
+  below assumes `User.plan` can be set directly (e.g. a manual Mongo
+  update, or a simple admin-only endpoint for testing) rather than
+  through a real purchase flow.
+- No other new vendors. Mongo, Redis, and the astrology MCP server
+  are unaffected by any of this — this roadmap only changes the
+  voice transport/reasoning path.
 
 ---
 
-## Suggested Build Order
+## Phase A — Plan-based routing (shared infrastructure, build first)
 
-1. ~~**Astrology MCP server**~~ — ✅ done (§1).
-2. ~~**Voice-to-voice**~~ — ✅ done (§2), sooner than originally planned since it turned out to just plug into the existing `streamTurn` pipeline as expected.
-3. ~~**Persona system**~~ — ✅ done (§3, 7/7), also sooner than planned: turned out not to need Memory/RAG first after all, since mode selection is a planning decision, not a knowledge-retrieval one.
-4. ~~**Memory**~~ — ✅ done (§4, 7/7): real persistence, extraction, embeddings, semantic retrieval, and dedup/decay, all verified live. Closes §3's deferred "relationship continuity" item.
-5. ~~**RAG wiring**~~ — ✅ wired (§5, 4/6 — content sourcing + seed script deliberately deferred, not part of MVP): reused the embedding client and brute-force cosine-similarity approach Memory built, applied to knowledge cards. Retrieval is real; the knowledge base is just empty by design until content is authored (a later, non-MVP step).
-6. ~~**Production hardening**~~ — ✅ done (§6, 7/7): auth, CORS, rate limiting, dead-code cleanup, real metrics/tracing, a real cascading account deletion backing a new privacy policy doc, and an accurate README — all verified live.
-7. ~~**Tests**~~ — ✅ done (§7, 4/4): Vitest, 60 tests (unit/integration/e2e), real Mongo + real Fastify/WebSocket with only the paid LLM call faked, full suite in under 2 seconds.
-8. **RAG content** — sourcing real astrology knowledge cards and running the seed script, whenever that becomes in-scope (post-MVP). The last item on the original roadmap.
+This is the actual answer to "how do we know which path to follow"
+— everything in Phases B/C/D plugs into this. Nothing tier-specific
+should be built before this exists, or it'll need rewiring later.
+
+- [x] Add `plan: "free" | "gold" | "diamond"` to the `User` model/
+      schema, default `"free"` — every existing user is Free until
+      explicitly upgraded. `VoicePlan` type lives in `user.types.ts`.
+- [x] Decide how a plan actually gets set for now — **decided: a
+      dedicated script, not an HTTP endpoint at all**, self-serve or
+      admin-gated. There's no admin-role concept anywhere in this
+      codebase yet, and standing one up just to gate a placeholder
+      felt like more risk (a half-built auth boundary) than a
+      script run by whoever already has DB/deploy access. Deliberately
+      excluded from `UpdateUserInput`/the existing self-service
+      `PATCH /users/:userId` so it can never be set that way, even
+      by accident — see `scripts/set-user-plan.ts` (`npx tsx
+      scripts/set-user-plan.ts <phoneNumber|userId> <free|gold|
+      diamond>`) and `UserRepository.setPlan`/`UserService.setPlan`.
+- [x] At WebSocket connect time (`realtime.gateway.ts`'s connection
+      handler, right after `session.userId` is derived from the
+      verified token) fetch the user's current `plan` from Mongo and
+      attach it to `RealtimeSessionContext.plan`. Done as a
+      fire-and-forget lookup that starts before `socket.on("message",
+      ...)` is registered but isn't awaited before registering it —
+      `session.plan` starts as `"free"` and is overwritten once the
+      lookup resolves (typically within a few ms, one indexed
+      `findById`); a message arriving in that narrow window would
+      see the default, which is harmless today since nothing branches
+      on `plan` yet beyond a log line (see below).
+- [x] **Staleness tolerance decided**: plan is looked up once per
+      WebSocket connection, not re-checked mid-session — an upgrade
+      takes effect on the user's next reconnect, not instantly
+      mid-call. Matches how the app already reconnects on drop
+      (`RECONNECT_DELAY_MS`), so it's a bounded, acceptable delay.
+- [x] **Scoped down from the original plan on purpose**: rather than
+      building `FreeVoicePipeline`/`GoldVoicePipeline`/
+      `DiamondVoicePipeline` as real classes now, `RealtimeService.
+      processAudio()` gained a single explicit branch point — if
+      `session.plan !== "free"`, it logs that no dedicated pipeline
+      exists yet and falls through to the existing cascade. Building
+      two empty pipeline classes with no real behavior (Gold/Diamond
+      don't exist until Phase C/D) would have been dead scaffolding;
+      this branch point is the one place Phase C/D need to hook into
+      instead, and it's already exercised by every non-Free-tier
+      session today (as a no-op fallback, logged). The real
+      extraction into a formal `VoicePipeline` interface + Free's own
+      class is still Phase B's job, not done here.
+- [x] **Fallback decision**: made concrete for today's actual state —
+      Gold/Diamond currently fall back to the Free cascade
+      unconditionally (nothing to fail yet, since neither pipeline
+      exists). The harder version of this question is still open and
+      belongs in Phase D once that pipeline is real: if a Diamond-
+      tier user's Live API session fails to establish (quota, region,
+      outage), does that turn/session degrade to Gold or Free, or
+      hard-error with a clear message? Decide and document before
+      Phase D ships this to real users — don't leave it as an
+      accident of whatever the first implementation happens to do.
+
+## Phase B — Free tier (baseline — already fully live)
+
+Today's existing cascade, unchanged — just needs to be wrapped
+behind Phase A's interface, not rebuilt.
+
+- [x] STT (`GeminiSttClient`) → planner → parallel MCP/RAG/memory →
+      response generation → TTS (`GeminiTtsClient`, WAV-wrapped raw
+      PCM) — fully implemented and live-verified this session,
+      including the JSON code-fence fix.
+- [x] Extracted into `FreeVoicePipeline` (`realtime/pipelines/free-
+      voice.pipeline.ts`), implementing the `VoicePipeline` interface
+      (`realtime/pipelines/voice-pipeline.types.ts`) — the cascade
+      itself (STT → concurrent display-translation + agent turn →
+      speculative sentence-by-sentence TTS) moved verbatim, no
+      behavior change. `RealtimeService.processAudio` is now a thin
+      session/protocol layer (validation, rate limiting,
+      `activeAbortController` lifecycle, the plan→pipeline dispatch
+      point) that delegates via `yield*` to whichever pipeline
+      `session.plan` picks — today always `FreeVoicePipeline`, with
+      the Gold/Diamond-falls-back-to-Free log line now living at
+      that one dispatch point instead of being buried inside the
+      cascade. `popReadySentence` moved to `realtime/pipelines/
+      sentence.ts` (needed by the pipeline, and keeping it in
+      `realtime.service.ts` would have created a circular import
+      once the service imports the pipeline). Verified: typecheck
+      clean, full suite (84/84, including the real-WebSocket e2e
+      test that exercises gateway → RealtimeService →
+      FreeVoicePipeline end to end) passes unchanged.
+
+## Phase C — Gold tier: audio-input planner (skip the separate STT call)
+
+The idea from this session's chat: instead of a dedicated
+upload-then-transcribe STT round-trip, feed the raw audio straight
+into the planner call and have it transcribe *and* decide the
+routing plan in one shot.
+
+- [x] Extended `LlmGenerateInput` (`llm.types.ts`) with an optional
+      `audio?: { data: Buffer; mimeType: string }` field.
+      `OpenAiLlmClient` ignores it (no current caller needs audio on
+      the OpenAI path).
+- [x] Extended `GeminiLlmClient.generate()`/`stream()` to attach
+      that audio as an inline `Part` on the last message, exactly as
+      planned — `generateContent`'s `Part` type already supported
+      this, no need for the `interactions` API.
+- [x] Extended the planner's output schema/type with a `transcript`
+      field — **made it optional, not required as originally
+      written**. A required field would have forced every text-input
+      planner call (Free tier, text chat) to echo back
+      `window.currentMessage` as `transcript` for no reason; optional
+      means it's only ever populated when audio was actually
+      attached, and `PlannerService.createPlan` throws if audio was
+      given but no transcript came back — so the "must be present
+      for audio calls" guarantee still holds, just enforced in code
+      instead of the schema.
+- [x] Updated `planner.prompt.ts`: a new "AUDIO INPUT" section
+      explaining when/how to transcribe, and the output-format
+      skeleton now shows `transcript` with an explicit note that
+      it's audio-only and should be omitted otherwise.
+- [x] Built `GoldVoicePipeline` — **required substantially more than
+      the original one-line plan anticipated**, because of a real
+      chicken-and-egg problem: `ContextBuilder.build()`'s memory
+      retrieval needs message *text* to embed, but for audio input
+      there is no text until the combined transcribe+plan call
+      returns. Turned out the planner's own prompt never reads
+      `window.memories` at all (only `ContextWindowBuilder`'s token
+      budget did), so the fix was narrower than it first looked:
+      - `ContextBuilder.build()`'s `message` param is now optional;
+        omitting it skips memory retrieval (`[]`) instead of
+        guessing, everything else (conversation history, birth/
+        partner profile) is unaffected since none of it depends on
+        message text.
+      - `AgentOrchestrator` split into `runTextTurn` (existing
+        behavior, unchanged) and a new `runAudioTurn`, both
+        delegating to a shared `executeAndRespond` phase (MCP/RAG
+        execution, response generation, persistence) — `runAudioTurn`
+        builds a text-less context, calls the planner with audio,
+        derives the transcript from the returned plan, *then*
+        persists the user's turn and patches `window.currentMessage`
+        before continuing into the shared phase. New public
+        `AgentService.streamTurnWithAudio` / `AgentOrchestrator.
+        streamTurnWithAudio`, alongside the untouched `streamTurn`.
+      - New `AgentStreamEvent` variant, `{type: "transcript", text}`,
+        yielded once the planner call resolves (audio-turn only).
+      - `SentenceSynthesizer` and `DisplayTranslator` extracted out
+        of `FreeVoicePipeline` into their own shared classes
+        (`realtime/pipelines/`) — Gold tier needs the identical
+        sentence-framed TTS + Hindi-display-translation logic, and
+        duplicating the English/Hindi-enforcement code across two
+        pipelines was a real drift risk, not just a style
+        preference. `FreeVoicePipeline` now uses these too — refactor
+        only, no behavior change (84/84 tests still passed
+        afterward).
+      - `GoldVoicePipeline.processAudio` mirrors `FreeVoicePipeline`'s
+        concurrency trick (kick off display-translation and keep
+        driving the agent turn forward at the same time) — the first
+        event out of `streamTurnWithAudio` is always `"transcript"`,
+        so that's the hook point instead of a separately-awaited STT
+        call.
+      - `resolveAudioMimeType` (`shared/utils/audio-mime.ts`)
+        extracted so `GeminiSttClient` and `GoldVoicePipeline` share
+        one format→MIME mapping instead of two copies that could
+        drift.
+      - `RealtimeService` now takes both `freeVoicePipeline` and
+        `goldVoicePipeline`, and `resolvePipeline()` actually routes
+        `session.plan === "gold"` to the new pipeline — Diamond still
+        falls back to Free with a log line (Phase D still not built).
+      - Verified: typecheck clean throughout every step, full suite
+        (91/91 — 7 new tests: planner-schema's `transcript` cases,
+        `resolveAudioMimeType`'s format mapping) passes, including
+        the real-Mongo/real-WebSocket e2e test exercising the
+        **unchanged** text-turn path end to end after the
+        `AgentOrchestrator` split.
+- [x] **First live test run, and it found a real bug** (fifth
+      live-only surprise this session): the combined transcribe+plan
+      call itself worked (`hasAudio: true`, 2.4s, model
+      `gemini-3.1-flash-lite`) — but the response failed schema
+      validation. Specifically: `mcp.required`/`rag.required`/
+      `memory.required` all came back correctly, but every *detail*
+      field under them (`tools`, `parallel`, `targetDate`,
+      `queries`, `topK`) came back `undefined` — the model correctly
+      decided nothing was needed, then didn't bother filling in the
+      now-irrelevant details, and the schema rejected that as
+      malformed rather than treating it as the harmless "nothing to
+      do here" it actually is. Same class of bug as the historical
+      `topK: 0` fix, just across every detail field at once,
+      apparently triggered more easily with audio attached than on
+      text-only calls (which have run this same schema hundreds of
+      times this session without hitting it). Fixed by adding
+      `.default(...)` to every detail field in `agentPlanSchema`
+      (tools→`[]`, parallel→`false`, targetDate/targetRangeDays→
+      `null`, queries→`[]`, topK→`0`) — applies to both tiers, not
+      Gold-specific, and is a strict robustness improvement either
+      way. Also reinforced `planner.prompt.ts` to explicitly say
+      "always include every key, even when required is false."
+      2 new regression tests. Typecheck clean, 93/93.
+- [ ] **Still not done — needs another live test**: the fix above
+      should let a Gold-tier turn get *past* planning, but nothing
+      after that point (MCP/RAG execution, response generation, TTS)
+      has been observed live yet for this tier — the turn errored
+      out at the planner-validation step before reaching any of it.
+      Treat everything past this fix as still unverified.
+- [ ] **Live-verify transcription accuracy doesn't degrade** when
+      the same call is also doing routing — compare tool-selection
+      quality against Free tier on the same set of test messages.
+- [ ] Measure actual latency win once live — confirm removing STT's
+      upload+transcribe round-trip produces a real, meaningful
+      improvement over Free tier before calling this tier done.
+
+## Phase D — Diamond tier: Gemini Live API (full speech-to-speech)
+
+The full architectural migration originally scoped as this
+project's only plan — now scoped to Diamond-tier users specifically,
+not a hard cutover. One persistent model session that listens,
+reasons, and speaks in one integrated loop; no separate STT/planner/
+TTS calls at all.
+
+- [ ] **Transport decision**: server-proxied WebSocket (app ↔ our
+      server ↔ Gemini Live) vs. direct client↔Gemini WebRTC (our
+      server only mints a short-lived session token). Proxied keeps
+      auth/ownership checks server-side and reuses more of the
+      existing `/ws` gateway shape; direct removes a network hop at
+      the cost of `react-native-webrtc` and a bigger client rewrite.
+- [ ] Confirm actual Live API access/quota/pricing for the account
+      before building against it.
+- [ ] Decide how the planner/MCP/RAG/memory steps map onto a Live
+      session: MCP astrology tools become function calls the model
+      invokes mid-conversation (reusing `AstrologyService`/the MCP
+      executor underneath, not rebuilt); persona-mode selection and
+      RAG/memory retrieval need a new home since there's no separate
+      up-front planning step in this model — see this session's
+      earlier discussion of that exact tradeoff (persona mode has no
+      clean equivalent; either folded into system instructions or a
+      lightweight self-reported tool call).
+- [ ] New server module wrapping the Live session lifecycle (session
+      create, audio in, function-call events, audio out, session
+      end) — likely the `DiamondVoicePipeline` from Phase A, or a
+      dedicated module it delegates to given how different this
+      session model is from the other two.
+- [ ] Feed birth profile, persona-mode guidance, and relevant memory
+      into the session's system instructions at session start.
+- [ ] App: continuous audio streaming instead of push-to-talk
+      buffering, for Diamond-tier sessions specifically — Free/Gold
+      keep push-to-talk. The client needs to know which mode to run,
+      which means it also needs to know the user's plan (from the
+      same user-fetch Phase A wires server-side).
+- [ ] Re-wire conversation persistence (user/assistant messages,
+      rolling summarization) so a Diamond-tier turn still gets
+      recorded in Mongo the way cascaded turns do.
+- [ ] Re-wire memory extraction/storage for Diamond-tier turns.
+- [ ] Re-apply the English/Hindi-only output restriction to whatever
+      produces the spoken reply here — today's `isEnglishOrHindi`
+      check sits on discrete TTS text input, which won't exist as a
+      separate step in this model.
+- [ ] Re-apply the Hindi transcript display-translation behavior for
+      the "You said: ..." UI text.
+- [ ] Add timing instrumentation (a Live-session equivalent of
+      today's `sttMs`/`timeToFirstAudioChunkMs` logging) so the
+      "fastest" claim is actually measured, not assumed.
+- [ ] Live latency test against Free/Gold; record real numbers here
+      once available.
+
+---
+
+## Explicitly out of scope for this roadmap
+
+- The actual billing/subscription purchase flow, plan upgrade/
+  downgrade UX, and payment provider integration.
+- Per-tier voice/quality differentiation as a product choice (e.g.
+  should Diamond sound different from Free) — a product decision to
+  make separately, not an engineering task tracked here.
+- Per-tier rate limiting or abuse prevention beyond what already
+  exists (`CHAT_RATE_LIMIT_PER_MINUTE`) — worth a follow-up once
+  real usage patterns per tier are known, not before.

@@ -15,12 +15,15 @@ to delete it. Written against the actual code as of §6
 | Rolling conversation summary | `Conversation.summary` | Long-context memory within a conversation. |
 | Extracted personal facts (name, preferences, relationships, life events) | `MemoryItem` | Cross-conversation personalization (§4). Each fact is a short LLM-generated sentence plus an embedding vector, not raw message text. |
 
-Third parties this data passes through: **OpenAI** (LLM
-generation, STT/TTS, embeddings — conversation content and
-extracted facts are sent to OpenAI's API per their own data
-usage terms) and the **astrology calculation MCP provider**
-(birth details are sent to compute charts). No other
-third-party processors are used today.
+Third parties this data passes through: **Google (Gemini API)**
+(LLM generation, STT, TTS by default — conversation content,
+voice audio, and extracted facts are sent to Google's API per
+their own data usage terms), **OpenAI** (embeddings only,
+always — see `EMBEDDING_PROVIDER` in `.env.example`; also LLM/
+STT/TTS if their provider is explicitly set back to "openai"),
+and the **astrology calculation MCP provider** (birth details
+are sent to compute charts). No other third-party processors
+are used today.
 
 ## Retention
 
