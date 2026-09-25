@@ -83,6 +83,20 @@ export function decodeToPcm16(
         reject
       );
 
+      /*
+       * If ffmpeg rejects the input early (corrupt/non-audio data) it
+       * exits before reading all of stdin, and the still-pending write
+       * emits EPIPE/EOF here. Unhandled, that's an uncaught exception —
+       * which `server.ts` turns into `process.exit(1)`, i.e. one bad
+       * upload would take the whole server down. Swallowing it is safe:
+       * the "close" handler below already rejects with ffmpeg's own
+       * stderr, which is the real failure reason.
+       */
+      ffmpeg.stdin.on(
+        "error",
+        () => {}
+      );
+
       ffmpeg.on(
         "close",
         (code) => {

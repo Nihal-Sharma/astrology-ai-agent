@@ -34,19 +34,36 @@ Same rule as ROADMAP.md: a step is only checked off (`- [x]`) once it is
 
 Nothing from Diamond is committed, and the new code has no tests.
 
-- [ ] Commit the working tree: `server/src/infrastructure/live/`,
+- [x] Commit the working tree: `server/src/infrastructure/live/`,
       `diamond-voice.pipeline.ts`, `diamond-system-instruction.ts`,
       `audio-transcode.ts`, `wav.ts`, the modified config / container / gateway /
       service / TTS client, `package.json` + lockfile, the three flow docs,
-      ROADMAP.md.
-- [ ] Add tests for `audio-transcode.ts`, `wav.ts`, and the pure parts of
-      `gemini-live.client.ts` (event bridging, connect timeout) with a fake Live
-      session.
-- [ ] Add a `DiamondVoicePipeline` test with the fake Live client: tool call →
-      tool result, segment flushing, `dispose()`.
-- [ ] Run the full suite; expect green.
+      ROADMAP.md. (Committed as `ae7051f`.)
+- [x] Add tests for `audio-transcode.ts` (real ffmpeg, no mock), `wav.ts`, and
+      `gemini-live.client.ts` (SDK mocked: option mapping, event bridging,
+      connect timeout, session commands) — `wav.test.ts`,
+      `audio-transcode.test.ts`, `gemini-live.client.test.ts`.
+- [x] Add a `DiamondVoicePipeline` test with a scripted fake Live session
+      (`diamond-voice.pipeline.test.ts`, 39 tests): turn protocol, audio pacing
+      and `endAudioTurn` ordering, segment flushing and streaming-before-
+      `turn_complete`, astrology and `recall_user_memory` tool round trips,
+      session reuse / per-connection isolation / conversation switch,
+      `dispose()`, persistence, hard-error failure paths, cancellation.
+- [x] Run the full suite: **17 files, 161 passing, 3 todo**; typecheck clean.
+- [x] **Bug found and fixed while writing these:** `decodeToPcm16` had no
+      `stdin` error handler. A large non-audio upload makes ffmpeg exit before
+      reading it all, the pending write emits EPIPE/EOF, and `server.ts` turns
+      any uncaught exception into `process.exit(1)` — one bad upload from a
+      Diamond user would have crashed the whole server. Fixed in
+      `audio-transcode.ts`; regression test confirmed to fail without the fix.
+      **Not yet committed** (made after the Phase D commit).
+- [x] Mutation-checked the pipeline tests: 5 deliberate breakages (no pacing,
+      1s segments, no `endAudioTurn`, wrong memory top-K, tool result never
+      sent) were each caught.
 
 **Done when:** committed, suite passes, Diamond has at least one automated test.
+**Status: done.** Only the `audio-transcode.ts` fix + the four new test files
+are left to commit.
 
 ## Step 2 — Finish Diamond
 
@@ -60,6 +77,22 @@ The open items from ROADMAP Phase D, plus one gap the docs never mention.
 - [ ] **Hindi transcript display-translation** — run the Live transcript through
       `DisplayTranslator` before `audio:transcribed`, concurrently, so it never
       blocks audio.
+- [ ] **Three gaps found by Step 1's tests** (recorded as `it.todo` in
+      `diamond-voice.pipeline.test.ts`; turn each into a real test + fix):
+      1. **Orphaned Live sessions** — `invalidateSession` only deletes the map
+         entry, it never calls `close()`. A decode failure (bad upload) drops a
+         perfectly healthy session without closing it, leaving an open, billed
+         Live connection until Google times it out.
+      2. **Dropped early events** — `LiveSession.events()` uses `events.on()`,
+         which only listens once iteration starts, and the pipeline starts
+         iterating only after `sendAudioPaced` finishes. Anything the server
+         emits while audio is still being sent (e.g. early input-transcript
+         deltas) is lost. Fix: buffer events from connect, not from first
+         iteration.
+      3. **Stale events after a cancel** — a cancelled turn leaves the model
+         still generating; its leftover audio / `turn_complete` arrive during
+         the *next* turn on the same session. Needs draining or turn-tagging.
+         Must be solved before barge-in (Step 3).
 - [ ] **Session limits and drops** — find out Live's session-length limit and
       what happens when it is hit or the socket drops mid-conversation. Handle
       it (reconnect and rebuild from the conversation window, or resume).
