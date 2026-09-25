@@ -31,6 +31,10 @@ import {
 } from "./pipelines/gold-voice.pipeline";
 
 import {
+  DiamondVoicePipeline,
+} from "./pipelines/diamond-voice.pipeline";
+
+import {
   activeWebsocketConnections,
 } from "../../infrastructure/observability/metrics";
 
@@ -67,6 +71,44 @@ export async function registerRealtimeGateway(
         .fastModel
     );
 
+  const diamondVoicePipeline =
+    new DiamondVoicePipeline({
+      liveClient: container.live,
+
+      liveModel:
+        container.config.live
+          .model,
+
+      liveVoice:
+        container.config.live
+          .voice,
+
+      astrologyService:
+        container.services
+          .astrology,
+
+      astrologyToolRegistry:
+        container.astrology
+          .toolRegistry,
+
+      contextBuilder:
+        container.agentContext
+          .builder,
+
+      contextWindowBuilder:
+        container.agentContext
+          .windowBuilder,
+
+      conversationWindowService:
+        container.services
+          .conversationWindow,
+
+      memory:
+        container.services.memory,
+
+      logger: container.logger,
+    });
+
   const realtimeService =
     new RealtimeService(
       container.services.agent,
@@ -74,7 +116,8 @@ export async function registerRealtimeGateway(
       container.config.rateLimit
         .chatMaxPerMinute,
       freeVoicePipeline,
-      goldVoicePipeline
+      goldVoicePipeline,
+      diamondVoicePipeline
     );
 
   app.get<{
@@ -528,6 +571,10 @@ export async function registerRealtimeGateway(
         "close",
         () => {
           realtimeService.cancel(
+            session
+          );
+
+          realtimeService.disposeSession(
             session
           );
 

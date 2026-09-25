@@ -27,4 +27,15 @@ export interface VoicePipeline {
 
     abortController: AbortController
   ): AsyncIterable<RealtimeOutboundMessage>;
+
+  /**
+   * Called once, when the underlying WebSocket connection closes —
+   * only meaningful for a pipeline that keeps per-connection state
+   * across turns (Diamond's persistent Live session; see
+   * `DiamondVoicePipeline`). Free/Gold are stateless per turn and
+   * don't implement this.
+   */
+  dispose?(
+    session: RealtimeSessionContext
+  ): void;
 }

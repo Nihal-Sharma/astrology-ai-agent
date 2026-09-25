@@ -30,6 +30,11 @@ import {
 } from "../infrastructure/speech";
 
 import {
+  LiveClient,
+  GeminiLiveClient,
+} from "../infrastructure/live";
+
+import {
   UserRepository,
   UserService,
 } from "../modules/user";
@@ -77,6 +82,7 @@ import {
   ContextBuilder,
   ContextWindowBuilder,
   ResponseService,
+  MemoryResult,
 } from "../modules/agent";
 import {
   AstrologyService,
@@ -103,6 +109,9 @@ export interface AppContainer {
     tts: TTSClient;
   };
 
+  /** Diamond tier only (ROADMAP.md's Phase D) — see `speech` above for Free/Gold's STT/TTS. */
+  live: LiveClient;
+
   db: {
     mongo: MongoDatabase;
     redis: RedisDatabase;
@@ -125,9 +134,33 @@ export interface AppContainer {
     birthProfile: BirthProfileService;
     partnerProfile: PartnerProfileService;
     conversation: ConversationService;
+    conversationWindow: ConversationWindowService;
     agent: AgentService;
    astrology: AstrologyService;
     places: PlacesService;
+
+    /** Diamond tier only — narrowed to what `DiamondVoicePipeline` actually calls. */
+    memory: {
+      extractAndStore(input: {
+        userId: string;
+        conversationId: string;
+        userMessage: string;
+        assistantMessage: string;
+      }): Promise<void>;
+
+      /** Backs Diamond's `recall_user_memory` Live tool — see `DiamondVoicePipeline`. */
+      retrieve(
+        userId: string,
+        query: string | string[],
+        topK: number
+      ): Promise<MemoryResult[]>;
+    };
+  };
+
+  /** Diamond tier only (ROADMAP.md's Phase D) — see `services.agent` for Free/Gold's equivalent. */
+  agentContext: {
+    builder: ContextBuilder;
+    windowBuilder: ContextWindowBuilder;
   };
 
   /**
@@ -308,6 +341,18 @@ export function createContainer(): AppContainer {
 
           logger,
         });
+
+  /*
+   * Diamond tier only (ROADMAP.md's Phase D) — no OpenAI equivalent
+   * exists, so this is unconditional (unlike llm/stt/tts above,
+   * which branch on config.*Provider) rather than provider-switched.
+   */
+  const liveClient =
+    new GeminiLiveClient({
+      apiKey: config.gemini.apiKey,
+
+      logger,
+    });
 
   /*
    * Same key again — no separate embeddings credential needed.
@@ -766,6 +811,8 @@ const astrologyService =
       tts: ttsClient,
     },
 
+    live: liveClient,
+
     db: {
       mongo,
       redis,
@@ -803,6 +850,10 @@ const astrologyService =
 
       conversation:
         conversationService,
+
+      conversationWindow:
+        conversationWindowService,
+
      astrology:
          astrologyService,
       agent:
@@ -810,6 +861,16 @@ const astrologyService =
 
       places:
         placesService,
+
+      memory:
+        memoryDependency,
+    },
+
+    agentContext: {
+      builder: contextBuilder,
+
+      windowBuilder:
+        contextWindowBuilder,
     },
   };
 }

@@ -59,7 +59,16 @@ export class RealtimeService {
      * goes straight into the planner call instead of a separate
      * STT step first.
      */
-    private readonly goldVoicePipeline: VoicePipeline
+    private readonly goldVoicePipeline: VoicePipeline,
+
+    /**
+     * The Diamond-tier cascade (ROADMAP.md's Phase D) — a
+     * persistent Gemini Live session per connection instead of a
+     * per-turn cascade. Unlike Free/Gold, this pipeline keeps
+     * state across turns, so its `dispose()` must be called on
+     * disconnect (see `disposeSession` below).
+     */
+    private readonly diamondVoicePipeline: VoicePipeline
   ) {}
 
   /**
@@ -467,32 +476,37 @@ export class RealtimeService {
 
   /**
    * Picks the voice pipeline for this session's plan — see
-   * ROADMAP.md's Phase A/B/C/D. Diamond (Phase D) has no
-   * dedicated pipeline yet, so it falls back to Free, logged
-   * here since that's silent otherwise.
+   * ROADMAP.md's Phase A/B/C/D.
    */
   private resolvePipeline(
     session: RealtimeSessionContext,
-    requestId: string
+    _requestId: string
   ): VoicePipeline {
     if (session.plan === "gold") {
       return this.goldVoicePipeline;
     }
 
     if (session.plan === "diamond") {
-      this.logger.debug(
-        {
-          module: "realtime",
-          sessionId:
-            session.sessionId,
-          requestId,
-          plan: session.plan,
-        },
-        "No dedicated pipeline yet for this plan — falling back to the free-tier cascade"
-      );
+      return this.diamondVoicePipeline;
     }
 
     return this.freeVoicePipeline;
+  }
+
+  /**
+   * Called once, when the underlying WebSocket connection closes —
+   * gives whichever pipeline was in use a chance to tear down any
+   * per-connection state (only Diamond's persistent Live session
+   * needs this; Free/Gold are stateless per turn and don't
+   * implement `dispose`).
+   */
+  disposeSession(
+    session: RealtimeSessionContext
+  ): void {
+    this.resolvePipeline(
+      session,
+      "dispose"
+    ).dispose?.(session);
   }
 
   /**

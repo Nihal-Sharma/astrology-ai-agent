@@ -213,6 +213,34 @@ export const config = Object.freeze({
     ),
   },
 
+  /**
+   * Diamond-tier only (ROADMAP.md's Phase D) — Gemini's Live
+   * (speech-to-speech) API, a different serving surface from
+   * `speech.*` above (no STT/TTS calls at all).
+   */
+  live: {
+    /**
+     * gemini-3.1-flash-live-preview: confirmed live via direct
+     * `ListModels` query — the SDK's own doc-comment `@example`
+     * blocks reference model names (`gemini-live-2.5-flash-preview`,
+     * `gemini-2.0-flash-live-preview-04-09`) that don't exist for
+     * this API version/account; both hang forever on connect (see
+     * `GeminiLiveClient`'s `withConnectTimeout`) rather than
+     * erroring, so this isn't a mistake that fails loudly if
+     * copied from there again.
+     */
+    model: getEnv(
+      "LIVE_MODEL",
+      "gemini-3.1-flash-live-preview"
+    ),
+
+    /** A Gemini prebuilt voice name — same set as `speech.ttsVoice`. */
+    voice: getEnv(
+      "LIVE_VOICE",
+      "Kore"
+    ),
+  },
+
   rag: {
     embeddingProvider: getEnv("EMBEDDING_PROVIDER", "openai"),
     vectorStore: getEnv("VECTOR_STORE", "pgvector"),

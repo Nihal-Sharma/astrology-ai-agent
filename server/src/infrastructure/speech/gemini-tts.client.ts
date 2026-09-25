@@ -12,6 +12,10 @@ import {
   TTSStreamChunk,
 } from "./speech.types";
 
+import {
+  wrapPcmAsWav,
+} from "../../shared/utils/wav";
+
 export interface GeminiTtsClientOptions {
   apiKey: string;
 
@@ -64,79 +68,10 @@ const DEFAULT_SAMPLE_RATE_HZ = 24000;
 
 const DEFAULT_CHANNELS = 1;
 
-const PCM_BITS_PER_SAMPLE = 16;
-
 function base64ToBuffer(
   base64: string
 ): Buffer {
   return Buffer.from(base64, "base64");
-}
-
-/**
- * Prepends a standard 44-byte RIFF/WAVE header to raw 16-bit PCM
- * data — turns Gemini's L16 output (which has no header/container
- * of its own) into a normal, independently-playable .wav file, the
- * same way OpenAI's TTS already returns a complete file. Needs the
- * full PCM length upfront (the header's data-size field), which is
- * why `synthesizeStream` below buffers a full sentence's PCM before
- * wrapping it, rather than wrapping and sending fragments as they
- * arrive.
- */
-function wrapPcmAsWav(
-  pcm: Buffer,
-  sampleRate: number,
-  channels: number
-): Buffer {
-  const blockAlign =
-    channels *
-    (PCM_BITS_PER_SAMPLE / 8);
-
-  const byteRate =
-    sampleRate * blockAlign;
-
-  const header = Buffer.alloc(44);
-
-  header.write("RIFF", 0, "ascii");
-  header.writeUInt32LE(
-    36 + pcm.length,
-    4
-  );
-  header.write("WAVE", 8, "ascii");
-
-  header.write("fmt ", 12, "ascii");
-  header.writeUInt32LE(16, 16);
-  header.writeUInt16LE(1, 20);
-  header.writeUInt16LE(
-    channels,
-    22
-  );
-  header.writeUInt32LE(
-    sampleRate,
-    24
-  );
-  header.writeUInt32LE(
-    byteRate,
-    28
-  );
-  header.writeUInt16LE(
-    blockAlign,
-    32
-  );
-  header.writeUInt16LE(
-    PCM_BITS_PER_SAMPLE,
-    34
-  );
-
-  header.write("data", 36, "ascii");
-  header.writeUInt32LE(
-    pcm.length,
-    40
-  );
-
-  return Buffer.concat([
-    header,
-    pcm,
-  ]);
 }
 
 /**

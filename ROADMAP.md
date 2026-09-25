@@ -5,11 +5,11 @@ direction changed: instead of migrating everyone to one new
 architecture, three tiers coexist permanently, each a genuinely
 different pipeline, gated by subscription plan:
 
-| Tier | Pipeline | Speed |
-|---|---|---|
-| **Free** | Audio → STT → LLM (planner + response) → MCP → TTS | Slowest (today's cascade, already live) |
-| **Gold** | Audio → LLM (audio input, no separate STT) → MCP → TTS | Mid |
-| **Diamond** | Audio → LLM (Live API, speech-to-speech) → MCP → Audio | Fastest |
+| Tier | Pipeline | Speed (intended) | Speed (measured, Phase C) |
+|---|---|---|---|
+| **Free** | Audio → STT → LLM (planner + response) → MCP → TTS | Slowest (today's cascade, already live) | ~19.9s total (an older, pre-optimization sample — see Phase 0/A history above; needs a fresh same-day run to compare fairly) |
+| **Gold** | Audio → LLM (audio input, no separate STT) → MCP → TTS | Mid | **~22-24s total, twice** — not meaningfully faster than Free in practice; see Phase C's live-test entries below for why (TTS and response generation dominate, and both are identical code in every tier) |
+| **Diamond** | Audio → LLM (Live API, speech-to-speech) → MCP → Audio | Fastest | Built and live-verified (Phase D) — **one real run**: ~3.0s to first audio, ~17.4s total, including a real MCP tool call. Promising vs. Gold's ~5-6s/~13-19s, but one run isn't enough to call it yet — see Phase D. |
 
 We go step by step. Each step gets checked off (`- [x]`) here once
 it's actually done and **verified live** — not just written or
@@ -27,20 +27,21 @@ being trusted.
   Diamond tier. Same Gemini account/`GEMINI_API_KEY` already in use;
   a different API surface (a persistent bidirectional session, not
   request/response) with different, likely higher, per-minute
-  billing. Model name candidates seen in the SDK's own examples
+  billing. **Resolved**: the real model is `gemini-3.1-flash-live-
+  preview` (config: `LIVE_MODEL`) — the SDK's own example model names
   (`gemini-live-2.5-flash-preview`, `gemini-2.0-flash-live-preview-
-  04-09`) — **do not trust these as final**; reconfirm against the
-  live SDK/docs when Phase D actually starts, the same way
-  `gemini-3.1-flash-tts-preview`'s accepted format turned out to
-  differ from what any doc excerpt suggested.
+  04-09`) turned out to be stale/nonexistent for this API version,
+  confirmed live the same way `gemini-3.1-flash-tts-preview`'s
+  accepted format turned out to differ from what any doc excerpt
+  suggested — see Phase D.
 - **Gemini audio-input on `generateContent`** (Gold tier) — no new
   service or credential, just a different call shape (an inline
   audio `Part` alongside the text prompt) on the client we already
   have.
-- **`react-native-webrtc`** (app only, Diamond tier, conditional) —
-  only needed if Diamond's transport decision (see Phase D) picks
-  direct client↔Gemini WebRTC over a server-proxied WebSocket.
-  Requires a prebuild/rebuild cycle like any native module here.
+- **`react-native-webrtc`** — **not needed**. Diamond's transport
+  decision (see Phase D) resolved to the server-proxied WebSocket,
+  reusing the existing `/ws` gateway and push-to-talk protocol
+  unchanged — no app-side native module or rebuild required.
 - **A payment/subscription/billing provider** (Stripe, Razorpay, or
   similar) — needed eventually to actually let users buy/upgrade a
   plan. **Explicitly out of scope for this roadmap.** Everything
@@ -248,18 +249,54 @@ routing plan in one shot.
       way. Also reinforced `planner.prompt.ts` to explicitly say
       "always include every key, even when required is false."
       2 new regression tests. Typecheck clean, 93/93.
-- [ ] **Still not done — needs another live test**: the fix above
-      should let a Gold-tier turn get *past* planning, but nothing
-      after that point (MCP/RAG execution, response generation, TTS)
-      has been observed live yet for this tier — the turn errored
-      out at the planner-validation step before reaching any of it.
-      Treat everything past this fix as still unverified.
-- [ ] **Live-verify transcription accuracy doesn't degrade** when
-      the same call is also doing routing — compare tool-selection
-      quality against Free tier on the same set of test messages.
-- [ ] Measure actual latency win once live — confirm removing STT's
-      upload+transcribe round-trip produces a real, meaningful
-      improvement over Free tier before calling this tier done.
+- [x] **Full turn confirmed live, twice, consistently** — both
+      completed end to end (STT-merge → MCP/RAG/memory execution →
+      response generation → TTS → persistence), same casual
+      "companion"/"direct" message shape both times:
+
+      | | Run 1 | Run 2 |
+      |---|---|---|
+      | `transcribeAndPlanMs` | 3318 | 3494 |
+      | `timeToFirstTextDeltaMs` | 3065 | 2749 |
+      | `timeToFirstAudioChunkMs` | 13100 | 12095 |
+      | `totalTurnMs` | 23870 | 22425 |
+
+      Both runs also show a `gemini-3.8-flash` `generate()` call
+      (no audio) a couple seconds after the turn finished, with no
+      accompanying error — matches `MemoryExtractor`'s fingerprint
+      exactly (fire-and-forget, main model, runs after the reply).
+      Circumstantial but consistent twice now: memory extraction is
+      firing correctly for Gold turns, same as Free — expected,
+      since `executeAndRespond` is the same code either way, but
+      good to see it actually happen.
+- [x] **Measured — and the honest answer is "it doesn't matter yet."**
+      `transcribeAndPlanMs` (~3.3-3.5s) is the one thing Gold
+      actually changes, but it's dwarfed by two costs that are
+      *identical in both tiers* and dominate the total:
+      - **TTS has a large fixed per-call cost, not a per-character
+        one.** Six sentences across both runs: 6/45/24/11/48/17
+        characters took 5851/5021/5195/6714/6098/4548ms
+        respectively — a 6-character reply took *longer* to
+        synthesize than a 45-character one. `gemini-3.1-flash-tts-
+        preview` is paying a large fixed latency per
+        `synthesizeStream` call almost regardless of text length.
+      - **Response generation is slow for very little output**:
+        77-78 output characters took 17.7s and 19.4s respectively,
+        across both runs.
+
+      Both of these sit in `executeAndRespond`/`SentenceSynthesizer`
+      — shared, unmodified by which tier is selected. Even if Gold's
+      transcribe+plan step is genuinely ~1-2s faster than Free's
+      separate STT+planner (still not directly A/B tested against a
+      fresh Free-tier run), that saving is close to invisible next
+      to ~17-19s of response generation and ~15-17s of cumulative
+      TTS time. **Gold tier is not meaningfully faster than Free
+      tier today** — not because the Phase C work was wrong, but
+      because the bottleneck this whole roadmap is chasing turned
+      out to live somewhere neither tier touches. Worth a dedicated
+      follow-up investigation into TTS/response-generation latency
+      specifically — likely higher-leverage than anything left in
+      Phase C or D.
 
 ## Phase D — Diamond tier: Gemini Live API (full speech-to-speech)
 
@@ -269,50 +306,282 @@ not a hard cutover. One persistent model session that listens,
 reasons, and speaks in one integrated loop; no separate STT/planner/
 TTS calls at all.
 
-- [ ] **Transport decision**: server-proxied WebSocket (app ↔ our
-      server ↔ Gemini Live) vs. direct client↔Gemini WebRTC (our
-      server only mints a short-lived session token). Proxied keeps
-      auth/ownership checks server-side and reuses more of the
-      existing `/ws` gateway shape; direct removes a network hop at
-      the cost of `react-native-webrtc` and a bigger client rewrite.
-- [ ] Confirm actual Live API access/quota/pricing for the account
-      before building against it.
-- [ ] Decide how the planner/MCP/RAG/memory steps map onto a Live
-      session: MCP astrology tools become function calls the model
-      invokes mid-conversation (reusing `AstrologyService`/the MCP
-      executor underneath, not rebuilt); persona-mode selection and
-      RAG/memory retrieval need a new home since there's no separate
-      up-front planning step in this model — see this session's
-      earlier discussion of that exact tradeoff (persona mode has no
-      clean equivalent; either folded into system instructions or a
-      lightweight self-reported tool call).
-- [ ] New server module wrapping the Live session lifecycle (session
-      create, audio in, function-call events, audio out, session
-      end) — likely the `DiamondVoicePipeline` from Phase A, or a
-      dedicated module it delegates to given how different this
-      session model is from the other two.
-- [ ] Feed birth profile, persona-mode guidance, and relevant memory
-      into the session's system instructions at session start.
-- [ ] App: continuous audio streaming instead of push-to-talk
-      buffering, for Diamond-tier sessions specifically — Free/Gold
-      keep push-to-talk. The client needs to know which mode to run,
-      which means it also needs to know the user's plan (from the
-      same user-fetch Phase A wires server-side).
-- [ ] Re-wire conversation persistence (user/assistant messages,
-      rolling summarization) so a Diamond-tier turn still gets
-      recorded in Mongo the way cascaded turns do.
-- [ ] Re-wire memory extraction/storage for Diamond-tier turns.
-- [ ] Re-apply the English/Hindi-only output restriction to whatever
-      produces the spoken reply here — today's `isEnglishOrHindi`
-      check sits on discrete TTS text input, which won't exist as a
-      separate step in this model.
+- [x] **Resolves Phase A's open question**: "if a Diamond-tier user's
+      Live API session fails to establish (quota, region, outage),
+      does that turn/session degrade to Gold or Free, or hard-error?"
+      — **decided: hard-error, no automatic tier downgrade.**
+      `DiamondVoicePipeline` catches connect/session failures and
+      yields `audio:error` with a message; it does not fall back to
+      Gold/Free mid-turn. Simplest correct behavior for now — a
+      Diamond user silently getting a different (slower, differently-
+      priced) tier's behavior without being told would be more
+      confusing than a clear error. Revisit only if live failure rates
+      turn out to justify the extra complexity of an automatic
+      downgrade path.
+- [x] **Transport decision: server-proxied WebSocket, reusing the
+      existing `/ws` gateway** — resolved in practice, not just in
+      theory: `DiamondVoicePipeline` is live-verified working through
+      the exact same `audio:start`/binary frame(s)/`audio:end`
+      protocol Free/Gold already use (see the app-transport bullet
+      below). No WebRTC, no client rewrite, no new gateway protocol.
+- [x] **Foundational `infrastructure/live/` module built and live-verified.**
+      `live.types.ts` defines a provider-independent `LiveClient`/
+      `LiveSession`/`LiveSessionEvent` interface (mirrors the existing
+      `LlmClient`/`STTClient`/`TTSClient` pattern on purpose — Diamond
+      code depends on these types, never on `@google/genai`'s Live
+      shapes directly). `gemini-live.client.ts` implements it, bridging
+      the SDK's callback-based API into the async-iterable style used
+      everywhere else via Node's `events.on()`.
+      **Live-tested end-to-end through this module** (not just the raw
+      SDK) with a stub tool, confirming every piece Diamond needs:
+      - Correct model: `gemini-3.1-flash-live-preview`. The SDK's own
+        doc-comment `@example` blocks reference `gemini-live-2.5-flash-
+        preview` / `gemini-2.0-flash-live-preview-04-09` — **both are
+        stale/wrong**, same failure mode as every other doc-vs-reality
+        gap this project has hit. Real Live-capable models were found
+        by calling `ListModels` directly and filtering for
+        `bidiGenerateContent` support.
+      - **Input audio must be 16-bit PCM, mono, 16kHz** exactly
+        (`audio/pcm;rate=16000`). Sending our TTS pipeline's native
+        24kHz PCM produces **zero response and no error** — the API
+        doesn't reject it, it just silently never replies. A linear-
+        resample step from 24kHz→16kHz is required wherever Diamond
+        feeds audio in.
+      - **`sendRealtimeInput({audioStreamEnd: true})` is required** to
+        reliably close out voice-activity-detection and get a reply —
+        added to our interface as `LiveSession.endAudioTurn()`, called
+        on the same `audio:end` gateway event Free/Gold already use.
+        This means Diamond can likely keep the same push-to-talk
+        protocol as Free/Gold (see the continuous-streaming bullet
+        below — may no longer be required).
+      - Input/output transcription, audio-out streaming, and the full
+        `tool_call` → `sendToolResult` → model-resumes-and-uses-the-
+        result round trip all confirmed working through our wrapper.
+      - **SDK gap found and guarded against**: the SDK's own
+        `live.connect()` promise awaits a server `setupComplete`
+        message that never arrives when setup fails (e.g. bad model
+        name) — the server closes the socket with a real reason (code
+        1008 + message), but the SDK doesn't surface it, so `connect()`
+        hangs forever instead of rejecting. Confirmed live by raw-
+        `ws` testing against the same endpoint. Fixed with our own
+        `withConnectTimeout` (15s) wrapper in `gemini-live.client.ts`
+        so a future bad model/config can't hang a Diamond session
+        indefinitely.
+      - **A second, more subtle bug found building `DiamondVoicePipeline`
+        itself**: sending a whole turn's audio chunks back-to-back with
+        no pacing at all (a plain synchronous loop, no `await` between
+        `sendAudioChunk` calls) makes the Live API accept the
+        connection and the audio fine, then **emit zero events for the
+        rest of the turn** — no transcript, no error, nothing, forever.
+        Isolated by testing the exact same burst against the raw SDK
+        directly (same silent hang) vs. the working wrapper with a
+        20ms delay between chunks (works every time) — some server-
+        side ingestion/VAD state doesn't tolerate a whole turn landing
+        in one burst. Fixed with a small delay between chunks
+        (`DiamondVoicePipeline.sendAudioPaced`).
+      - The app sends `.m4a` (AAC), not raw PCM (`audio:start
+        {format:"m4a"}`) — Free/Gold forward that directly to Gemini's
+        regular `generateContent`, which decodes containers itself,
+        but confirmed live the Live API's `sendRealtimeInput` does
+        NOT (`sendClientContent` with inline container audio was also
+        tried — rejected live: "Operation is not implemented"). Added
+        `shared/utils/audio-transcode.ts` (`decodeToPcm16`, via
+        `ffmpeg-static` — a new dependency, no system ffmpeg required)
+        to decode `.m4a` → 16-bit PCM/16kHz server-side before it ever
+        reaches the Live session. Verified live against a real
+        ffmpeg-encoded `.m4a` clip, not just WAV.
+- [x] Confirmed actual Live API access/quota/pricing works for this
+      account — every live test in this section ran against the real
+      API with the real key, including a full real turn with a real
+      MCP tool call through the real astrology server.
+- [x] **Decided how MCP/persona map onto a Live session** (RAG/memory
+      remain partially open — see below):
+      - **MCP tools**: `astrologyToolRegistry.getEnabled()` mapped to
+        `LiveToolDeclaration[]` with **deliberately empty/permissive
+        parameter schemas** (`{type:"object",properties:{},required:[]}`),
+        not each tool's real `inputSchema` — the real schemas demand
+        birth-profile fields (day/month/year/lat/lon/tzone) the model
+        has no business filling in; `AstrologyService.executeTools`
+        already derives those server-side from the user's stored
+        profile regardless of what's passed (same as Free/Gold), so
+        showing the model that schema would only invite hallucinated
+        astronomical values. The model just calls a tool by name.
+        Live-verified for real: the model correctly called `planets`
+        unprompted, the server resolved the user's real birth profile,
+        executed against the real astrology MCP server, and the model
+        used the result correctly in its spoken reply.
+      - **Persona mode**: no per-turn planner to pick one, so
+        `DiamondVoicePipeline` uses `context.previousPersonaMode ??
+        "blended"` once at session connect (via `buildResponseSystemPrompt`,
+        the same builder Free/Gold's response step uses) — simplest
+        option that still respects a returning conversation's established
+        mode. No mid-session mode switching yet.
+      - [x] **Memory retrieval: built and live-verified, via a Diamond-only
+        mechanism.** The system instruction is built once, before any user
+        message exists, so there's nothing to search memories with at that
+        point (same limitation `ContextBuilder.build`'s own doc comment
+        documents for Gold's pre-transcript build) — Free/Gold's two
+        mechanisms (Free's upfront `ContextBuilder` fallback, Gold's
+        `plan.memory.required` targeted search) both need a planner
+        decision to hang off of, and Diamond has no planner step at all.
+        **Fix**: a dedicated `recall_user_memory` Live tool
+        (`DiamondVoicePipeline.buildToolDeclarations`/`executeMemorySearch`),
+        backed by `MemoryService.retrieve` — the model decides at runtime
+        whether something's worth recalling, same as it already decides
+        when to call an astrology tool. Unlike the astrology tools'
+        deliberately empty schemas, this one takes a real model-supplied
+        `query` argument, since a search string has no "correct" server-
+        derivable value to protect against hallucination.
+        **Live-verified** (2026-09-23): told the model a fact in one turn
+        ("my favorite color is purple"), asked about it in a later turn on
+        the same connection — it said a short acknowledgment ("Wait, let
+        me check...", confirming the acknowledgment-filler instruction
+        generalizes beyond astrology tools) then correctly recalled
+        "purple". Full write→read round trip confirmed against real Mongo
+        data. See Diamond-flow.md's "Memory retrieval" section.
+      - **RAG (knowledge-card) retrieval: still open**, same root cause and
+        same fix should apply — expose `RAGService.retrieve` as another
+        Live tool, not built yet.
+- [x] **Decided: mask tool-call latency with a spoken acknowledgment,
+      not silence.** Confirmed mechanism first — the Live API isn't
+      truly concurrent: the model halts its own generation to emit a
+      function-call event, we run the real MCP call (same
+      `AstrologyService`/`McpExecutor`, same Redis-backed `McpCache`
+      — a cache hit is tens of ms, a cold call is a real round-trip
+      to the astrology server), call `session.sendToolResponse(...)`,
+      and only then does the model resume and actually speak. That
+      gap is genuine dead air unless we hide it.
+      **Fix, starting soft (prompt-only)**: the Diamond session's
+      system instructions require a short in-character acknowledgment
+      line, in English or Hindi (matching the existing
+      `isEnglishOrHindi` restriction), *before* every tool call —
+      never go silent while looking something up. "Kundali" is the
+      natural word to lean on here, e.g.:
+      ```
+      Whenever you need to call an astrology tool, say a short, warm
+      acknowledgment FIRST, in the same language/register you've been
+      speaking, before making the call — never go silent while
+      looking something up. Examples:
+      - "एक मिनट, आपकी कुंडली देखती हूँ..."
+      - "Wait, let me have a quick look at your kundali..."
+      - "होल्ड ऑन, चार्ट चेक कर रही हूँ..."
+      Keep it brief — one short sentence, not a speech. Then make
+      the call.
+      ```
+      This is prompt steering, not an API guarantee — reliable in
+      practice for a capable model given concrete examples, but not
+      "always." **Deliberately not building a hard fallback yet**
+      (server-side: detect a `toolCall` event, and if no
+      acknowledgment audio arrived in the last N ms, synthesize a
+      canned filler line ourselves) — that's real extra engineering
+      (a timer, a fallback TTS path, injected audio) that's only
+      worth it if live testing shows the model skipping the
+      acknowledgment often enough to matter. Revisit after the first
+      live Diamond tool-call test, the same "verify before hardening"
+      pattern every other tier in this roadmap followed.
+      Also worth deciding at the same time: the model can chain
+      multiple tool calls in one turn before finally speaking, so the
+      silent window can be the sum of several calls, not just one —
+      the instruction above should probably also cover that case
+      (one acknowledgment covering the whole lookup, not one per
+      call) once this is actually being tested live.
+- [x] **`DiamondVoicePipeline` built** (`realtime/pipelines/diamond-voice.pipeline.ts`)
+      — implements the same `VoicePipeline` interface as Free/Gold
+      (`processAudio`), plus an optional `dispose(session)` added to
+      that interface for Diamond's own need: unlike Free/Gold
+      (stateless per turn), Diamond keeps ONE Live session alive per
+      WebSocket connection across every turn (so conversation context
+      stays inside the Live session itself, its whole point — no per-
+      turn context rebuild), created lazily on the connection's first
+      turn and torn down via `dispose()` on disconnect
+      (`realtime.gateway.ts`'s socket `"close"` handler, routed through
+      `RealtimeService.disposeSession`). Session state keyed by the
+      `RealtimeSessionContext` object itself, recreated if
+      `conversationId` ever changes mid-connection.
+      Outbound audio reuses Free/Gold's existing `audio:sentence_start`/
+      binary frame(s)/`audio:sentence_end` framing (same reason
+      `GeminiTtsClient.synthesizeStream` buffers before wrapping —
+      extracted that WAV-header logic to `shared/utils/wav.ts` so both
+      share it), but **not** as one giant segment for the whole turn.
+      **Found and fixed the same day, via a real user's live test**:
+      the first version buffered the ENTIRE turn's audio internally
+      and only sent anything after `turn_complete` — so
+      `timeToFirstAudioChunkMs` (measuring when Gemini's SDK produced
+      its first internal delta) was **not what the user actually
+      experienced**; real time-to-first-audio was closer to
+      `totalTurnMs`, since nothing reached the client until the whole
+      reply had finished generating. A user reported "5-7 seconds for
+      a simple hello" despite `timeToFirstAudioChunkMs` logging under
+      3 seconds — that mismatch is exactly this bug. Fixed by flushing
+      audio to the client in ~0.8s segments as it arrives
+      (`SEGMENT_FLUSH_SECONDS`, `flushAudioSegment`), each its own
+      self-contained WAV clip with an incrementing `index` — same
+      multi-segment framing Free/Gold already use per sentence, just
+      size-boxed instead of sentence-text-boxed (Diamond has no text
+      to find sentence breaks in). `timeToFirstAudioChunkMs` is now
+      accurate: it's the time to the first segment actually sent.
+      Not yet re-verified live with real timing numbers after this
+      fix — do that before trusting the metric again (same "verify
+      before believing it" pattern as everything else in this phase).
+      Wired into `container.ts` (new `container.live: LiveClient`,
+      `container.agentContext.{builder,windowBuilder}`,
+      `container.services.{conversationWindow,memory}`) and
+      `realtime.gateway.ts` (constructed alongside Free/Gold, passed
+      into `RealtimeService`'s now 3-pipeline constructor).
+- [x] System instructions built once per Live session
+      (`diamond-system-instruction.ts`) from `ContextBuilder.build()` +
+      `ContextWindowBuilder.build()` — the same builders Free/Gold's
+      response step uses, called independently of the planner. Includes
+      the persona base prompt, the tool-usage note, the "kundali"
+      acknowledgment-filler instructions (decided earlier in this
+      phase), conversation summary/recent messages/resume notes, and
+      birth/partner profile JSON. Memories are empty (see the RAG/
+      memory bullet above).
+- [x] **App transport confirmed exactly as hoped**: `endAudioTurn()`
+      closes out a turn on demand, so Diamond reuses Free/Gold's exact
+      push-to-talk `audio:start`/binary frame(s)/`audio:end` protocol —
+      live-verified end-to-end through the real `/ws` gateway with zero
+      app-side or gateway-protocol changes. No continuous-streaming
+      mode needed.
+- [x] Conversation persistence wired: `ConversationWindowService.recordUserTurn`/
+      `recordAssistantTurn` called with the turn's final input/output
+      transcript once `turn_complete` arrives, then fire-and-forget
+      `maybeSummarize` — same pattern `AgentOrchestrator` already uses
+      for Free/Gold, called directly since Diamond has no orchestrator
+      step of its own. Live-verified: a real turn persisted correctly.
+- [x] Memory extraction wired: fire-and-forget `MemoryService.extractAndStore`
+      after a completed turn, same pattern/call shape as Free/Gold.
+- [ ] Re-apply the English/Hindi-only output restriction. The base
+      system prompt's rule 13 asks for it, but there's no server-side
+      enforcement point left the way `SentenceSynthesizer` gates
+      Free/Gold's TTS input today — Diamond's audio comes straight from
+      the model with nothing to intercept. Prompt-only for now, same
+      "soft first" pattern as the acknowledgment-filler decision above;
+      revisit if live testing shows the model actually drifting
+      language.
 - [ ] Re-apply the Hindi transcript display-translation behavior for
-      the "You said: ..." UI text.
-- [ ] Add timing instrumentation (a Live-session equivalent of
-      today's `sttMs`/`timeToFirstAudioChunkMs` logging) so the
-      "fastest" claim is actually measured, not assumed.
-- [ ] Live latency test against Free/Gold; record real numbers here
-      once available.
+      the "You said: ..." UI text — `audio:transcribed`'s payload is
+      today's raw Live transcript text, not run through
+      `DisplayTranslator` the way Free/Gold's is.
+- [x] Timing instrumentation added: `timeToFirstAudioChunkMs`/
+      `totalTurnMs` logged per turn (`"Realtime audio turn latency
+      (diamond)"`), mirroring Free/Gold's existing latency logs.
+- [ ] **Live latency test against Free/Gold — only one real turn run
+      so far** (see below), not enough yet to draw the same kind of
+      conclusion Phase C reached for Gold. Needs a few more real runs,
+      ideally one with a cache-cold MCP call and one with a cache-hit,
+      before writing anything definitive here.
+
+**First real end-to-end Diamond turn** (2026-09-22, through the actual
+`/ws` gateway, a real dev user with a real birth profile, a real MCP
+tool call against the live astrology server — not a synthetic unit
+test): `timeToFirstAudioChunkMs: 3026`, `totalTurnMs: 17437`, one
+`planets` tool call resolved and executed in ~130ms. For comparison,
+Gold's two live runs (Phase C table above) landed
+`timeToFirstAudioChunkMs` around 5-6s and `totalTurnMs` around 13-19s
+— so Diamond's first-audio latency looks meaningfully better here, but
+one run each (no tool call in the Gold runs vs. one in this Diamond
+run) isn't a fair enough comparison to conclude anything yet.
 
 ---
 

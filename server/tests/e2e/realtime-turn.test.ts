@@ -23,6 +23,8 @@ import {
 
 import { OpenAiSttClient, OpenAiTtsClient } from "../../src/infrastructure/speech";
 
+import { GeminiLiveClient } from "../../src/infrastructure/live";
+
 import { logger } from "../../src/infrastructure/observability/logger";
 
 import {
@@ -381,6 +383,13 @@ describe("Realtime turn E2E (real Mongo, real Fastify/WebSocket, fake LLM)", () 
           logger,
         }),
       },
+      // Constructed but never connected — this test's users are
+      // all "free" plan, so DiamondVoicePipeline is wired (the
+      // gateway always builds it) but never exercised.
+      live: new GeminiLiveClient({
+        apiKey: "test-key",
+        logger,
+      }),
       db: {
         mongo: mongoDatabase,
         redis: redisDatabase,
@@ -404,8 +413,16 @@ describe("Realtime turn E2E (real Mongo, real Fastify/WebSocket, fake LLM)", () 
         partnerProfile:
           partnerProfileService,
         conversation: conversationService,
+        conversationWindow:
+          conversationWindowService,
         agent: agentService,
         astrology: astrologyService,
+        memory: noopMemory,
+      },
+      agentContext: {
+        builder: contextBuilder,
+        windowBuilder:
+          contextWindowBuilder,
       },
       deleteUserAccount,
     };
